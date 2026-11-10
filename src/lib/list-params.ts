@@ -30,6 +30,13 @@ export const listParams = {
   sort: parseAsStringLiteral(SORT_OPTIONS.map((option) => option.value)).withDefault("-createdAt"),
 };
 
+/** The API rejects longer searches, so a pasted paragraph is cut rather than refused. */
+export const searchTerm = (search: string) => search.trim().slice(0, 100);
+
+const OBJECT_ID = /^[0-9a-f]{24}$/i;
+/** Drops an id that could not be a record id, such as one mangled in a copied link. */
+export const recordId = (id: string | null) => (id && OBJECT_ID.test(id) ? id : undefined);
+
 const DATE_PARAM = /^\d{4}-\d{2}-\d{2}$/;
 const isDateParam = (value: string | null): value is string =>
   value !== null && DATE_PARAM.test(value);

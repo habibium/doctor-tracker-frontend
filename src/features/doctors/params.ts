@@ -1,6 +1,6 @@
 import { createLoader, parseAsString } from "nuqs/server";
 import type { ListDoctorsData } from "@/lib/api";
-import { dateRangeQuery, listParams } from "@/lib/list-params";
+import { dateRangeQuery, listParams, searchTerm } from "@/lib/list-params";
 
 export const doctorParams = {
   ...listParams,
@@ -16,7 +16,7 @@ export type DoctorListQuery = NonNullable<ListDoctorsData["query"]>;
 
 /** Server and browser both build the request here, so their query keys always match. */
 export function toDoctorQuery(params: DoctorParams): DoctorListQuery {
-  const search = params.search.trim();
+  const search = searchTerm(params.search);
   return {
     page: Math.max(1, params.page),
     limit: params.limit,

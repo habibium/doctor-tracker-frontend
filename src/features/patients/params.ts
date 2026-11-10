@@ -1,6 +1,6 @@
 import { createLoader, parseAsString, parseAsStringLiteral } from "nuqs/server";
 import type { Gender, ListPatientsData, PatientCondition } from "@/lib/api";
-import { dateRangeQuery, listParams } from "@/lib/list-params";
+import { dateRangeQuery, listParams, recordId, searchTerm } from "@/lib/list-params";
 
 const CONDITION_VALUES: PatientCondition[] = ["stable", "recovering", "under_observation", "critical"];
 const GENDER_VALUES: Gender[] = ["female", "male", "other"];
@@ -19,7 +19,8 @@ export type PatientListQuery = NonNullable<ListPatientsData["query"]>;
 
 /** Server and browser both build the request here, so their query keys always match. */
 export function toPatientQuery(params: PatientParams): PatientListQuery {
-  const search = params.search.trim();
+  const search = searchTerm(params.search);
+  const doctorId = recordId(params.doctorId);
   return {
     page: Math.max(1, params.page),
     limit: params.limit,
@@ -27,7 +28,7 @@ export function toPatientQuery(params: PatientParams): PatientListQuery {
     ...(search && { search }),
     ...(params.condition && { condition: params.condition }),
     ...(params.gender && { gender: params.gender }),
-    ...(params.doctorId && { doctorId: params.doctorId }),
+    ...(doctorId && { doctorId }),
     ...dateRangeQuery(params.from, params.to),
   };
 }

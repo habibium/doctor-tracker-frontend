@@ -140,6 +140,7 @@ function DoctorFilter({
   return (
     <DoctorCombobox
       className="w-full sm:w-56"
+      label="Doctor"
       placeholder="All doctors"
       value={value}
       onChange={(doctor) => {

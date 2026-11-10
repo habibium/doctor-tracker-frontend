@@ -20,6 +20,8 @@ interface DoctorComboboxProps {
   value: PatientDoctor | null;
   onChange: (doctor: PatientDoctor | null) => void;
   id?: string;
+  /** Names the field when no visible label points at it. */
+  label?: string;
   placeholder?: string;
   invalid?: boolean;
   className?: string;
@@ -33,6 +35,7 @@ export function DoctorCombobox({
   value,
   onChange,
   id,
+  label,
   placeholder = "Search doctors",
   invalid,
   className,
@@ -60,6 +63,7 @@ export function DoctorCombobox({
     >
       <ComboboxInput
         id={id}
+        aria-label={label}
         placeholder={placeholder}
         aria-invalid={invalid}
         showClear={Boolean(value)}
