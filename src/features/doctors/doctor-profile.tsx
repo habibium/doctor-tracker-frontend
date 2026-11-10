@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCanEdit } from "@/components/user-provider";
 import { AddPatientButton } from "@/features/patients/patient-actions";
 import { PatientsView } from "@/features/patients/patients-view";
 import { formatNumber, initials } from "@/lib/format";
@@ -17,6 +18,7 @@ import { doctorQueries } from "./queries";
 
 export function DoctorProfile({ id }: { id: string }) {
   const { data: doctor, error, isPending, refetch } = useQuery(doctorQueries.detail(id));
+  const canEdit = useCanEdit();
 
   if (isPending) return <DoctorProfileSkeleton />;
   if (!doctor) return <LoadError error={error} onRetry={() => void refetch()} />;
@@ -95,7 +97,7 @@ export function DoctorProfile({ id }: { id: string }) {
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Patients</h2>
-          <AddPatientButton doctor={doctor} />
+          {canEdit && <AddPatientButton doctor={doctor} />}
         </div>
         <PatientsView doctorId={doctor.id} />
       </section>

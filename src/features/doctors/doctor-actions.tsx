@@ -18,10 +18,9 @@ import type { Doctor } from "@/lib/api";
 import { DeleteDoctorDialog } from "./delete-doctor-dialog";
 import { DoctorFormDialog } from "./doctor-form-dialog";
 
+/** The caller decides who sees this; the page wraps it in `AdminOnly`. */
 export function AddDoctorButton() {
-  const canEdit = useCanEdit();
   const [open, setOpen] = useState(false);
-  if (!canEdit) return null;
 
   return (
     <>

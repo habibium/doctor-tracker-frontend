@@ -3,14 +3,16 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { ListFallback } from "@/components/data-table/list-fallback";
+import { AdminOnly } from "@/components/current-user";
 import { PageHeader } from "@/components/page-header";
+import { UserProvider } from "@/components/user-provider";
 import { loadPatientParams, toPatientQuery } from "@/features/patients/params";
 import { AddPatientButton } from "@/features/patients/patient-actions";
 import { PatientsView } from "@/features/patients/patients-view";
 import { patientQueries } from "@/features/patients/queries";
 import { hasDateRange } from "@/lib/list-params";
 import { getQueryClient } from "@/lib/query-client";
-import { apiContext } from "@/lib/session";
+import { apiContext, getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Patients" };
 
@@ -19,7 +21,9 @@ export default function PatientsPage({ searchParams }: PageProps<"/patients">) {
     <>
       <PageHeader title="Patients" description="Every patient on record, with their condition and doctor.">
         <Suspense>
-          <AddPatientButton />
+          <AdminOnly>
+            <AddPatientButton />
+          </AdminOnly>
         </Suspense>
       </PageHeader>
 
@@ -33,7 +37,11 @@ export default function PatientsPage({ searchParams }: PageProps<"/patients">) {
 async function PatientsData({ searchParams }: Pick<PageProps<"/patients">, "searchParams">) {
   // Live data: render on every request, never as part of a prefetched shell.
   await connection();
-  const [params, context] = await Promise.all([loadPatientParams(searchParams), apiContext()]);
+  const [params, context, user] = await Promise.all([
+    loadPatientParams(searchParams),
+    apiContext(),
+    getCurrentUser(),
+  ]);
   const queryClient = getQueryClient();
 
   // Date filters depend on the visitor's time zone, which the server can't know;
@@ -43,8 +51,10 @@ async function PatientsData({ searchParams }: Pick<PageProps<"/patients">, "sear
   }
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <PatientsView />
-    </HydrationBoundary>
+    <UserProvider user={user}>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <PatientsView />
+      </HydrationBoundary>
+    </UserProvider>
   );
 }

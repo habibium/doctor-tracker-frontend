@@ -1,10 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ActivityIcon, LayoutDashboardIcon, StethoscopeIcon, UsersRoundIcon } from "lucide-react";
-import { UserMenu, UserMenuSkeleton } from "@/components/app-shell/user-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -51,7 +50,8 @@ function ActiveNavLinks() {
   return <NavLinks pathname={usePathname()} />;
 }
 
-export function AppSidebar() {
+/** `footer` is rendered by the server, so the sidebar itself needs no session data. */
+export function AppSidebar({ footer }: { footer: ReactNode }) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -78,11 +78,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <Suspense fallback={<UserMenuSkeleton />}>
-          <UserMenu />
-        </Suspense>
-      </SidebarFooter>
+      <SidebarFooter>{footer}</SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

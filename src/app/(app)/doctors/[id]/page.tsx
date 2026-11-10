@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { UserProvider } from "@/components/user-provider";
 import { DoctorProfile, DoctorProfileSkeleton } from "@/features/doctors/doctor-profile";
 import { doctorQueries } from "@/features/doctors/queries";
 import { loadPatientParams, toPatientQuery } from "@/features/patients/params";
@@ -10,7 +11,7 @@ import { patientQueries } from "@/features/patients/queries";
 import { ApiError } from "@/lib/api";
 import { hasDateRange } from "@/lib/list-params";
 import { getQueryClient } from "@/lib/query-client";
-import { apiContext } from "@/lib/session";
+import { apiContext, getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Doctor profile" };
 
@@ -25,10 +26,11 @@ export default function DoctorPage(props: PageProps<"/doctors/[id]">) {
 async function DoctorData({ params, searchParams }: PageProps<"/doctors/[id]">) {
   // Live data: render on every request, never as part of a prefetched shell.
   await connection();
-  const [{ id }, listParams, context] = await Promise.all([
+  const [{ id }, listParams, context, user] = await Promise.all([
     params,
     loadPatientParams(searchParams),
     apiContext(),
+    getCurrentUser(),
   ]);
   const queryClient = getQueryClient();
   const detail = doctorQueries.detail(id, context);
@@ -47,8 +49,10 @@ async function DoctorData({ params, searchParams }: PageProps<"/doctors/[id]">) 
   if (failure instanceof ApiError && (failure.status === 404 || failure.status === 400)) notFound();
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <DoctorProfile id={id} />
-    </HydrationBoundary>
+    <UserProvider user={user}>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <DoctorProfile id={id} />
+      </HydrationBoundary>
+    </UserProvider>
   );
 }

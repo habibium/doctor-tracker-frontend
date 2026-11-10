@@ -33,10 +33,9 @@ interface AddPatientButtonProps {
   variant?: "default" | "outline";
 }
 
+/** The caller decides who sees this: `AdminOnly` on a page, `useCanEdit` in a client view. */
 export function AddPatientButton({ doctor, variant = "default" }: AddPatientButtonProps) {
-  const canEdit = useCanEdit();
   const [open, setOpen] = useState(false);
-  if (!canEdit) return null;
 
   return (
     <>

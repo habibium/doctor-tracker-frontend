@@ -13,20 +13,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSkeleton,
-} from "@/components/ui/sidebar";
-import { useUser } from "@/components/user-provider";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { initials } from "@/lib/format";
+import type { CurrentUser } from "@/lib/session";
 
 const ROLE_LABELS = { admin: "Admin", viewer: "Viewer, read only" };
 
-export function UserMenu() {
-  const user = useUser();
+export function UserMenu({ user }: { user: CurrentUser }) {
   const queryClient = useQueryClient();
   const [signingOut, setSigningOut] = useState(false);
 
@@ -75,12 +70,15 @@ export function UserMenu() {
   );
 }
 
+/** Fixed sizes on purpose: this is part of the prerendered shell, so it must be stable. */
 export function UserMenuSkeleton() {
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuSkeleton showIcon />
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <div className="flex h-14 items-center gap-2 px-3" role="status" aria-label="Loading account">
+      <Skeleton className="size-8 shrink-0 rounded-full" />
+      <div className="flex flex-1 flex-col gap-1.5 group-data-[collapsible=icon]:hidden">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-2.5 w-16" />
+      </div>
+    </div>
   );
 }
