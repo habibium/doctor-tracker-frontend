@@ -10,6 +10,7 @@ import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
 import { DateRangeFilter } from "@/components/data-table/date-range-filter";
 import { DensityToggle } from "@/components/data-table/density-toggle";
 import { FilterSelect } from "@/components/data-table/filter-select";
+import { ListHeader } from "@/components/data-table/list-header";
 import { LoadError, NoResults } from "@/components/data-table/list-states";
 import { SearchInput } from "@/components/data-table/search-input";
 import { LocalDate } from "@/components/local-date";
@@ -159,15 +160,6 @@ function DoctorsToolbar() {
         </Button>
       )}
 
-      <div className="ml-auto flex items-center gap-2">
-        <FilterSelect
-          label="Sort order"
-          value={params.sort}
-          options={SORT_OPTIONS}
-          onChange={(sort) => setParams({ sort, page: null })}
-        />
-        <DensityToggle />
-      </div>
     </div>
   );
 }
@@ -207,6 +199,15 @@ function DoctorsResults() {
 
   return (
     <>
+      <ListHeader total={data.meta.total} singular="doctor" plural="doctors">
+        <FilterSelect
+          label="Sort order"
+          value={params.sort}
+          options={SORT_OPTIONS}
+          onChange={(sort) => setParams({ sort, page: null })}
+        />
+        <DensityToggle />
+      </ListHeader>
       <DataTable
         columns={columns}
         data={data.data}

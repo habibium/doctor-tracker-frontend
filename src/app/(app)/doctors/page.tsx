@@ -2,9 +2,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
+import { ListFallback } from "@/components/data-table/list-fallback";
 import { PageHeader } from "@/components/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AddDoctorButton } from "@/features/doctors/doctor-actions";
 import { DoctorsView } from "@/features/doctors/doctors-view";
 import { loadDoctorParams, toDoctorQuery } from "@/features/doctors/params";
@@ -25,7 +24,7 @@ export default function DoctorsPage({ searchParams }: PageProps<"/doctors">) {
       </PageHeader>
 
       {/* The header above is static; only this part waits for the request. */}
-      <Suspense fallback={<DoctorsFallback />}>
+      <Suspense fallback={<ListFallback />}>
         <DoctorsData searchParams={searchParams} />
       </Suspense>
     </>
@@ -53,20 +52,5 @@ async function DoctorsData({ searchParams }: Pick<PageProps<"/doctors">, "search
     <HydrationBoundary state={dehydrate(queryClient)}>
       <DoctorsView />
     </HydrationBoundary>
-  );
-}
-
-function DoctorsFallback() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
-        <Skeleton className="h-9 w-full rounded-full sm:w-72" />
-        <Skeleton className="h-9 w-44 rounded-full" />
-        <Skeleton className="h-9 w-36 rounded-full" />
-      </div>
-      <div className="overflow-hidden rounded-2xl border bg-card">
-        <DataTableSkeleton />
-      </div>
-    </div>
   );
 }
