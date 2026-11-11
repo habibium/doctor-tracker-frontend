@@ -9,7 +9,6 @@ import {
   getIntakeHours,
   getPatientsPerDoctor,
   getRegistrations,
-  getSpecializationBreakdown,
   getWorkload,
   type Registrations,
 } from "@/lib/api";
@@ -121,13 +120,6 @@ export const analyticsQueries = {
       queryKey: [...key, "workload"],
       queryFn: async ({ signal }) =>
         (await getWorkload({ signal, throwOnError: true, ...context })).data,
-    }),
-
-  specializations: (context?: ApiContext) =>
-    queryOptions({
-      queryKey: [...key, "specializations"],
-      queryFn: async ({ signal }) =>
-        (await getSpecializationBreakdown({ signal, throwOnError: true, ...context })).data,
     }),
 
   demographics: (context?: ApiContext) =>
