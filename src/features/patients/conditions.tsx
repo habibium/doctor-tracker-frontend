@@ -13,7 +13,12 @@ interface ConditionInfo {
 
 /** Ordered from least to most urgent; charts and filters all follow this order. */
 export const CONDITIONS: ConditionInfo[] = [
-  { value: "stable", label: "Stable", fill: "bg-condition-stable", onFill: "text-on-condition" },
+  {
+    value: "stable",
+    label: "Stable",
+    fill: "bg-condition-stable",
+    onFill: "text-on-condition-stable",
+  },
   {
     value: "recovering",
     label: "Recovering",

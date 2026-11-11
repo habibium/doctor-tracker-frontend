@@ -10,6 +10,7 @@
   --font-sans: var(--font-sans);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading: var(--font-heading);
+  --font-brand: var(--font-brand);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,15 +40,22 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-mint: var(--brand-mint);
+  --color-motif-blue: var(--motif-blue);
+  --color-motif-navy: var(--motif-navy);
+  --color-motif-mint: var(--motif-mint);
   --color-condition-stable: var(--condition-stable);
   --color-condition-recovering: var(--condition-recovering);
   --color-condition-observation: var(--condition-observation);
   --color-condition-critical: var(--condition-critical);
   --color-on-condition: var(--on-condition);
+  --color-on-condition-stable: var(--on-condition-stable);
   --color-on-condition-observation: var(--on-condition-observation);
   --color-data: var(--data);
   --color-data-soft: var(--data-soft);
   --color-positive: var(--positive);
+  --shadow-panel: var(--panel-shadow);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -57,95 +65,124 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Built from the logo: brand blue (#0080FE) and mint (#00D2A6), each stepped per theme
+ * so text and marks keep their contrast. Neutrals carry a trace of the blue hue (256).
+ */
 :root {
+  color-scheme: light;
+
   --background: oklch(1 0 0);
-  --foreground: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.22 0.03 258);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.148 0.004 228.8);
+  --card-foreground: oklch(0.22 0.03 258);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.148 0.004 228.8);
-  --primary: oklch(0.218 0.008 223.9);
-  --primary-foreground: oklch(0.987 0.002 197.1);
-  --secondary: oklch(0.963 0.002 197.1);
-  --secondary-foreground: oklch(0.218 0.008 223.9);
-  --muted: oklch(0.963 0.002 197.1);
-  --muted-foreground: oklch(0.56 0.021 213.5);
-  --accent: oklch(0.963 0.002 197.1);
-  --accent-foreground: oklch(0.218 0.008 223.9);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.925 0.005 214.3);
-  --input: oklch(0.925 0.005 214.3);
-  --ring: oklch(0.723 0.014 214.4);
-  --chart-1: oklch(0.872 0.007 219.6);
-  --chart-2: oklch(0.56 0.021 213.5);
-  --chart-3: oklch(0.45 0.017 213.2);
-  --chart-4: oklch(0.378 0.015 216);
-  --chart-5: oklch(0.275 0.011 216.9);
+  --popover-foreground: oklch(0.22 0.03 258);
+  --primary: oklch(0.55 0.2 256);
+  --primary-foreground: oklch(0.99 0.004 250);
+  --secondary: oklch(0.955 0.014 252);
+  --secondary-foreground: oklch(0.3 0.05 258);
+  --muted: oklch(0.966 0.008 252);
+  --muted-foreground: oklch(0.52 0.03 256);
+  --accent: oklch(0.95 0.022 250);
+  --accent-foreground: oklch(0.3 0.07 258);
+  --destructive: oklch(0.55 0.21 25);
+  --border: oklch(0.915 0.012 255);
+  --input: oklch(0.885 0.014 255);
+  --ring: oklch(0.55 0.2 256);
+  --chart-1: oklch(0.86 0.06 250);
+  --chart-2: oklch(0.72 0.13 252);
+  --chart-3: oklch(0.58 0.19 256);
+  --chart-4: oklch(0.48 0.16 258);
+  --chart-5: oklch(0.38 0.12 260);
   --radius: 0.625rem;
-  --sidebar: oklch(0.987 0.002 197.1);
-  --sidebar-foreground: oklch(0.148 0.004 228.8);
-  --sidebar-primary: oklch(0.218 0.008 223.9);
-  --sidebar-primary-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-accent: oklch(0.963 0.002 197.1);
-  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
-  --sidebar-border: oklch(0.925 0.005 214.3);
-  --sidebar-ring: oklch(0.723 0.014 214.4);
+
+  /* The sidebar colours double as the app plane the content panel floats on. */
+  --sidebar: oklch(0.957 0.014 252);
+  --sidebar-foreground: oklch(0.32 0.035 258);
+  --sidebar-primary: oklch(0.55 0.2 256);
+  --sidebar-primary-foreground: oklch(0.99 0.004 250);
+  --sidebar-accent: oklch(0.925 0.022 252);
+  --sidebar-accent-foreground: oklch(0.22 0.03 258);
+  --sidebar-border: oklch(0.9 0.016 252);
+  --sidebar-ring: oklch(0.55 0.2 256);
+  --panel-shadow: 0 1px 2px oklch(0.3 0.06 258 / 5%), 0 10px 30px -18px oklch(0.3 0.08 258 / 18%);
+
+  --brand-blue: oklch(0.55 0.2 256);
+  --brand-mint: oklch(0.6 0.13 170);
+  --motif-blue: oklch(0.6 0.2 256);
+  --motif-navy: oklch(0.47 0.17 257);
+  --motif-mint: oklch(0.74 0.15 170);
 
   /*
-   * Colour is reserved for patient condition, the way a triage board uses it.
-   * The four steps were checked for colour-blind separation as adjacent segments.
-   * Every other chart mark uses the neutral --data ink.
+   * Patient condition: validated as adjacent segments on --card for colour-blind
+   * separation. Labels on a fill use whichever ink clears 4.5:1 against it.
    */
-  --condition-stable: #0ca30c;
-  --condition-recovering: #2a78d6;
-  --condition-observation: #eda100;
-  --condition-critical: #d03b3b;
+  --condition-stable: #00996b;
+  --condition-recovering: #7e4ed7;
+  --condition-observation: #eb9a04;
+  --condition-critical: #d73337;
   --on-condition: #ffffff;
-  --on-condition-observation: #0b0b0b;
-  --data: oklch(0.45 0.017 213.2);
-  --data-soft: oklch(0.925 0.005 214.3);
-  --positive: #006300;
+  --on-condition-stable: #0b1324;
+  --on-condition-observation: #0b1324;
+  --data: oklch(0.58 0.19 256);
+  --data-soft: oklch(0.93 0.03 252);
+  --positive: oklch(0.52 0.12 168);
 }
 
 .dark {
-  --background: oklch(0.148 0.004 228.8);
-  --foreground: oklch(0.987 0.002 197.1);
-  --card: oklch(0.218 0.008 223.9);
-  --card-foreground: oklch(0.987 0.002 197.1);
-  --popover: oklch(0.218 0.008 223.9);
-  --popover-foreground: oklch(0.987 0.002 197.1);
-  --primary: oklch(0.925 0.005 214.3);
-  --primary-foreground: oklch(0.218 0.008 223.9);
-  --secondary: oklch(0.275 0.011 216.9);
-  --secondary-foreground: oklch(0.987 0.002 197.1);
-  --muted: oklch(0.275 0.011 216.9);
-  --muted-foreground: oklch(0.723 0.014 214.4);
-  --accent: oklch(0.275 0.011 216.9);
-  --accent-foreground: oklch(0.987 0.002 197.1);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.56 0.021 213.5);
-  --chart-1: oklch(0.872 0.007 219.6);
-  --chart-2: oklch(0.56 0.021 213.5);
-  --chart-3: oklch(0.45 0.017 213.2);
-  --chart-4: oklch(0.378 0.015 216);
-  --chart-5: oklch(0.275 0.011 216.9);
-  --sidebar: oklch(0.218 0.008 223.9);
-  --sidebar-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-accent: oklch(0.275 0.011 216.9);
-  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.56 0.021 213.5);
+  color-scheme: dark;
 
-  --condition-recovering: #3987e5;
-  --condition-observation: #c98500;
-  --on-condition-observation: #ffffff;
-  --data: oklch(0.82 0.012 214.4);
-  --data-soft: oklch(0.32 0.011 216.9);
-  --positive: #0ca30c;
+  --background: oklch(0.2 0.024 258);
+  --foreground: oklch(0.96 0.008 250);
+  --card: oklch(0.225 0.026 258);
+  --card-foreground: oklch(0.96 0.008 250);
+  --popover: oklch(0.24 0.026 258);
+  --popover-foreground: oklch(0.96 0.008 250);
+  --primary: oklch(0.7 0.16 254);
+  --primary-foreground: oklch(0.2 0.05 258);
+  --secondary: oklch(0.27 0.028 258);
+  --secondary-foreground: oklch(0.96 0.008 250);
+  --muted: oklch(0.26 0.024 258);
+  --muted-foreground: oklch(0.72 0.025 255);
+  --accent: oklch(0.28 0.04 256);
+  --accent-foreground: oklch(0.96 0.008 250);
+  --destructive: oklch(0.68 0.19 22);
+  --border: oklch(0.86 0.03 255 / 11%);
+  --input: oklch(0.86 0.03 255 / 16%);
+  --ring: oklch(0.7 0.16 254);
+  --chart-1: oklch(0.36 0.08 256);
+  --chart-2: oklch(0.48 0.12 255);
+  --chart-3: oklch(0.6 0.15 254);
+  --chart-4: oklch(0.72 0.13 252);
+  --chart-5: oklch(0.84 0.08 250);
+
+  --sidebar: oklch(0.16 0.022 258);
+  --sidebar-foreground: oklch(0.82 0.02 255);
+  --sidebar-primary: oklch(0.7 0.16 254);
+  --sidebar-primary-foreground: oklch(0.2 0.05 258);
+  --sidebar-accent: oklch(0.235 0.03 258);
+  --sidebar-accent-foreground: oklch(0.96 0.008 250);
+  --sidebar-border: oklch(0.86 0.03 255 / 9%);
+  --sidebar-ring: oklch(0.7 0.16 254);
+  --panel-shadow: 0 1px 2px oklch(0 0 0 / 30%), 0 12px 32px -16px oklch(0 0 0 / 50%);
+
+  --brand-blue: oklch(0.7 0.16 254);
+  --brand-mint: oklch(0.8 0.14 170);
+  --motif-blue: oklch(0.68 0.17 254);
+  --motif-navy: oklch(0.6 0.15 258);
+  --motif-mint: oklch(0.78 0.14 170);
+
+  --condition-stable: #009e74;
+  --condition-recovering: #835cd6;
+  --condition-observation: #c58500;
+  --condition-critical: #cc3336;
+  --on-condition: #ffffff;
+  --on-condition-stable: #0b1324;
+  --on-condition-observation: #0b1324;
+  --data: oklch(0.68 0.16 254);
+  --data-soft: oklch(0.3 0.04 256);
+  --positive: oklch(0.78 0.14 168);
 }
 
 @layer base {
@@ -164,8 +201,28 @@
   h1, h2, h3 {
     @apply font-heading;
   }
+  ::selection {
+    background-color: color-mix(in oklch, var(--primary) 22%, transparent);
+  }
 }
 
 @utility tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Page artwork fades toward the title on the left and into the content below. */
+@utility motif-mask {
+  mask-image:
+    linear-gradient(to left, black 0%, black 10%, transparent 58%),
+    linear-gradient(to bottom, black 35%, transparent 100%);
+  mask-composite: intersect;
+}
+
+/* The gutter is reserved up front, so content never shifts when a scrollbar appears. */
+@utility panel-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 35%, transparent) transparent;
 }
