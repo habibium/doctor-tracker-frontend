@@ -14,6 +14,7 @@ import { AddPatientButton } from "@/features/patients/patient-actions";
 import { PatientsView } from "@/features/patients/patients-view";
 import { formatNumber, initials } from "@/lib/format";
 import { DoctorProfileActions } from "./doctor-actions";
+import { DoctorAnalyticsBoard } from "./doctor-analytics";
 import { doctorQueries } from "./queries";
 
 export function DoctorProfile({ id }: { id: string }) {
@@ -93,6 +94,8 @@ export function DoctorProfile({ id }: { id: string }) {
           </div>
         </dl>
       </div>
+
+      <DoctorAnalyticsBoard doctor={doctor} />
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { PageMotif } from "@/components/page-motif";
 import { UserProvider } from "@/components/user-provider";
+import { analyticsQueries } from "@/features/dashboard/queries";
 import { DoctorProfile, DoctorProfileSkeleton } from "@/features/doctors/doctor-profile";
 import { doctorQueries } from "@/features/doctors/queries";
 import { loadPatientParams, toPatientQuery } from "@/features/patients/params";
@@ -39,8 +40,11 @@ async function DoctorData({ params, searchParams }: PageProps<"/doctors/[id]">) 
   const queryClient = getQueryClient();
   const detail = doctorQueries.detail(id, context);
 
+  // The doctor's own analytics group months in the visitor's time zone, so the browser
+  // fetches those; the clinic-wide split they're compared against is fetched here.
   await Promise.all([
     queryClient.prefetchQuery(detail),
+    queryClient.prefetchQuery(analyticsQueries.conditions(context)),
     hasDateRange(listParams)
       ? undefined
       : queryClient.prefetchQuery(

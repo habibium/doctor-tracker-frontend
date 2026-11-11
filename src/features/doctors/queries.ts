@@ -5,6 +5,7 @@ import {
   createDoctor,
   deleteDoctor,
   getDoctor,
+  getDoctorAnalytics,
   getDoctorFilters,
   listDoctors,
   type UpdateDoctor,
@@ -32,6 +33,15 @@ export const doctorQueries = {
       queryKey: [...queryKeys.doctors, "detail", id],
       queryFn: async ({ signal }) =>
         (await getDoctor({ path: { id }, signal, throwOnError: true, ...context })).data,
+    }),
+
+  /** Months are grouped in the visitor's time zone, so this one is fetched by the browser. */
+  analytics: (id: string, timezone: string) =>
+    queryOptions({
+      queryKey: [...queryKeys.doctors, "analytics", id, timezone],
+      queryFn: async ({ signal }) =>
+        (await getDoctorAnalytics({ path: { id }, query: { timezone }, signal, throwOnError: true }))
+          .data,
     }),
 
   filters: (context?: ApiContext) =>
