@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,8 +26,20 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 const DEMO_ACCOUNTS = [
-  { label: "Admin", access: "Full access", email: "admin@doctortracker.dev", password: "Admin@12345" },
-  { label: "Viewer", access: "Read only", email: "viewer@doctortracker.dev", password: "Viewer@12345" },
+  {
+    label: "Admin",
+    access: "Full access",
+    email: "admin@doctortracker.dev",
+    password: "Admin@12345",
+    icon: ShieldCheckIcon,
+  },
+  {
+    label: "Viewer",
+    access: "Read only",
+    email: "viewer@doctortracker.dev",
+    password: "Viewer@12345",
+    icon: EyeIcon,
+  },
 ];
 
 /** Only same-site paths are followed, so `?next=` cannot send someone to another site. */
@@ -117,19 +129,28 @@ export function LoginForm() {
         Sign in
       </Button>
 
-      <div className="flex flex-col gap-2 rounded-2xl border border-dashed p-3">
-        <p className="text-sm text-muted-foreground">Demo accounts. Pick one to fill the form.</p>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          Or try a demo account
+          <span className="h-px flex-1 bg-border" />
+        </div>
         <div className="grid grid-cols-2 gap-2">
-          {DEMO_ACCOUNTS.map(({ label, access, email, password }) => (
+          {DEMO_ACCOUNTS.map(({ label, access, email, password, icon: Icon }) => (
             <Button
               key={email}
               type="button"
               variant="outline"
-              className="h-auto flex-col items-start gap-0 py-2"
+              className="h-auto justify-start gap-3 rounded-2xl px-3 py-2.5 text-left"
               onClick={() => form.reset({ email, password })}
             >
-              <span>{label}</span>
-              <span className="text-xs font-normal text-muted-foreground">{access}</span>
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15">
+                <Icon />
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span>{label}</span>
+                <span className="text-xs font-normal text-muted-foreground">{access}</span>
+              </span>
             </Button>
           ))}
         </div>

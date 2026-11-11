@@ -42,6 +42,8 @@
   --color-card: var(--card);
   --color-brand-blue: var(--brand-blue);
   --color-brand-mint: var(--brand-mint);
+  --color-brand-panel: var(--brand-panel);
+  --color-brand-panel-foreground: var(--brand-panel-foreground);
   --color-motif-blue: var(--motif-blue);
   --color-motif-navy: var(--motif-navy);
   --color-motif-mint: var(--motif-mint);
@@ -110,6 +112,8 @@
 
   --brand-blue: oklch(0.55 0.2 256);
   --brand-mint: oklch(0.6 0.13 170);
+  --brand-panel: oklch(0.48 0.18 258);
+  --brand-panel-foreground: oklch(1 0 0);
   --motif-blue: oklch(0.6 0.2 256);
   --motif-navy: oklch(0.47 0.17 257);
   --motif-mint: oklch(0.74 0.15 170);
@@ -169,6 +173,8 @@
 
   --brand-blue: oklch(0.7 0.16 254);
   --brand-mint: oklch(0.8 0.14 170);
+  --brand-panel: oklch(0.27 0.07 258);
+  --brand-panel-foreground: oklch(1 0 0);
   --motif-blue: oklch(0.68 0.17 254);
   --motif-navy: oklch(0.6 0.15 258);
   --motif-mint: oklch(0.78 0.14 170);

@@ -12,7 +12,7 @@ const W = 1600;
 const H = 136;
 
 /** A rounded plus, the silhouette of the logo's cross. */
-function crossPath(cx: number, cy: number, size: number, arm: number, r: number, ri = r) {
+export function crossPath(cx: number, cy: number, size: number, arm: number, r: number, ri = r) {
   const h = size / 2;
   const a = arm;
   const p = (x: number, y: number) => `${+(cx + x).toFixed(2)} ${+(cy + y).toFixed(2)}`;
