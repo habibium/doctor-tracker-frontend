@@ -281,11 +281,13 @@ function Patients() {
               <BarList
                 compact
                 unit="patients"
-                items={data.genders.map((row) => ({
-                  key: row.gender,
-                  label: GENDER_LABELS[row.gender],
-                  value: row.patients,
-                }))}
+                items={[...data.genders]
+                  .sort((a, b) => b.patients - a.patients)
+                  .map((row) => ({
+                    key: row.gender,
+                    label: GENDER_LABELS[row.gender],
+                    value: row.patients,
+                  }))}
               />
             )}
           </QueryContent>
