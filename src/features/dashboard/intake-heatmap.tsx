@@ -3,6 +3,7 @@
 import { type CSSProperties, type KeyboardEvent, useState } from "react";
 import { ChartMark, ChartTip, TipRow, TipTitle, useChartTip } from "@/components/charts/chart-tip";
 import { formatHour, WEEKDAYS } from "@/components/charts/chart-format";
+import { TableView, TD, TH } from "@/components/charts/table-view";
 import type { IntakeHours } from "@/lib/api";
 import { formatNumber, formatPercent } from "@/lib/format";
 
@@ -103,7 +104,7 @@ export function IntakeHeatmap({ data, timezone }: { data: IntakeHours; timezone:
           role="grid"
           aria-label={`New patients by weekday and hour, ${timezone} time`}
           onKeyDown={onKeyDown}
-          className="grid grid-cols-[2.5rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_repeat(24,0.875rem)] gap-0.5 @2xl/heat:grid-cols-[2.25rem_repeat(24,minmax(0,1fr))] @2xl/heat:grid-rows-[auto_repeat(7,1.75rem)]"
+          className="grid grid-cols-[2.5rem_repeat(7,minmax(0,1fr))] grid-rows-[auto_repeat(24,0.875rem)] gap-0.5 @xl/heat:grid-cols-[2.25rem_repeat(24,minmax(0,1fr))] @xl/heat:grid-rows-[auto_repeat(7,1.75rem)]"
         >
           <div role="row" className="contents">
             <span role="columnheader" className="sr-only">
@@ -114,7 +115,7 @@ export function IntakeHeatmap({ data, timezone }: { data: IntakeHours; timezone:
                 key={hour}
                 role="columnheader"
                 style={{ "--h": hour + 2 } as CSSProperties}
-                className="pr-1 text-right text-[0.6875rem] leading-[0.875rem] text-muted-foreground [grid-column:1] [grid-row:var(--h)] @2xl/heat:pr-0 @2xl/heat:pb-1 @2xl/heat:text-left @2xl/heat:leading-none @2xl/heat:[grid-column:var(--h)] @2xl/heat:[grid-row:1]"
+                className="pr-1 text-right text-[0.6875rem] leading-[0.875rem] text-muted-foreground [grid-column:1] [grid-row:var(--h)] @xl/heat:pr-0 @xl/heat:pb-1 @xl/heat:text-left @xl/heat:leading-none @xl/heat:[grid-column:var(--h)] @xl/heat:[grid-row:1]"
               >
                 <span aria-hidden="true">{hour % 3 === 0 ? formatHour(hour) : ""}</span>
                 <span className="sr-only">{hourSpan(hour, hour + 1)}</span>
@@ -127,7 +128,7 @@ export function IntakeHeatmap({ data, timezone }: { data: IntakeHours; timezone:
               <span
                 role="rowheader"
                 style={{ "--d": day + 2 } as CSSProperties}
-                className="pb-1 text-center text-xs text-muted-foreground [grid-column:var(--d)] [grid-row:1] @2xl/heat:self-center @2xl/heat:pb-0 @2xl/heat:text-left @2xl/heat:[grid-column:1] @2xl/heat:[grid-row:var(--d)]"
+                className="pb-1 text-center text-xs text-muted-foreground [grid-column:var(--d)] [grid-row:1] @xl/heat:self-center @xl/heat:pb-0 @xl/heat:text-left @xl/heat:[grid-column:1] @xl/heat:[grid-row:var(--d)]"
               >
                 <span aria-hidden="true">{WEEKDAYS[day]!.slice(0, 3)}</span>
                 <span className="sr-only">{WEEKDAYS[day]}</span>
@@ -153,7 +154,7 @@ export function IntakeHeatmap({ data, timezone }: { data: IntakeHours; timezone:
                             backgroundColor: levelColor(level(patients)),
                           } as CSSProperties
                         }
-                        className="cursor-default rounded-[3px] outline-none [grid-column:var(--d)] [grid-row:var(--h)] hover:ring-2 hover:ring-foreground focus-visible:ring-2 focus-visible:ring-foreground @2xl/heat:[grid-column:var(--h)] @2xl/heat:[grid-row:var(--d)]"
+                        className="cursor-default rounded-[3px] outline-none [grid-column:var(--d)] [grid-row:var(--h)] hover:ring-2 hover:ring-foreground focus-visible:ring-2 focus-visible:ring-foreground @xl/heat:[grid-column:var(--h)] @xl/heat:[grid-row:var(--d)]"
                       />
                     }
                   >
@@ -193,6 +194,44 @@ export function IntakeHeatmap({ data, timezone }: { data: IntakeHours; timezone:
           in Bangladesh.
         </p>
       </div>
+
+      <TableView>
+        <table>
+          <caption className="sr-only">New patients by weekday and hour</caption>
+          <thead>
+            <tr>
+              <th scope="col" className={TH}>
+                Weekday
+              </th>
+              {HOURS.map((hour) => (
+                <th key={hour} scope="col" className={`${TH} text-right`}>
+                  {formatHour(hour)}
+                </th>
+              ))}
+              <th scope="col" className={`${TH} text-right`}>
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {DAYS.map((day) => (
+              <tr key={day}>
+                <th scope="row" className={`${TD} text-left font-normal`}>
+                  {WEEKDAYS[day]}
+                </th>
+                {HOURS.map((hour) => (
+                  <td key={hour} className={TD}>
+                    {formatNumber(grid[day]![hour]!)}
+                  </td>
+                ))}
+                <td className={`${TD} font-medium`}>
+                  {formatNumber(grid[day]!.reduce((sum, value) => sum + value, 0))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </TableView>
 
       <ChartTip handle={tip}>
         {(cell) => (

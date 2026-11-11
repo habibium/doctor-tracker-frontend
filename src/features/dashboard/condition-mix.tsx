@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import { formatShare } from "@/components/charts/chart-format";
+import { TableView, TD, TH } from "@/components/charts/table-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ConditionBar } from "@/features/patients/condition-bar";
@@ -129,8 +130,9 @@ function MixList({ rows, overall, groupLabel }: { rows: Row[]; overall: number; 
               <span className="truncate font-medium" title={row.key}>
                 {row.key}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="truncate text-xs text-muted-foreground">
                 {formatNumber(row.doctors)} {row.doctors === 1 ? "doctor" : "doctors"}
+                {row.doctors > 0 && `, ${formatNumber(Math.round(row.patients / row.doctors))} patients each`}
               </span>
             </div>
             <span className="tabular text-right">
@@ -159,6 +161,46 @@ function MixList({ rows, overall, groupLabel }: { rows: Row[]; overall: number; 
           </li>
         ))}
       </ul>
+
+      <TableView>
+        <table className="w-full">
+          <caption className="sr-only">Patients by condition for each {groupLabel.toLowerCase()}</caption>
+          <thead>
+            <tr>
+              <th scope="col" className={TH}>
+                {groupLabel}
+              </th>
+              <th scope="col" className={cn(TH, "text-right")}>
+                Patients
+              </th>
+              {CONDITIONS.map((condition) => (
+                <th key={condition.value} scope="col" className={cn(TH, "text-right")}>
+                  {condition.label}
+                </th>
+              ))}
+              <th scope="col" className={cn(TH, "text-right")}>
+                Critical share
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key}>
+                <th scope="row" className={cn(TD, "text-left font-normal")}>
+                  {row.key}
+                </th>
+                <td className={TD}>{formatNumber(row.patients)}</td>
+                {CONDITIONS.map((condition) => (
+                  <td key={condition.value} className={TD}>
+                    {formatNumber(row[condition.value])}
+                  </td>
+                ))}
+                <td className={TD}>{row.patients > 0 ? formatShare(row.share) : "–"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </TableView>
     </div>
   );
 }
@@ -192,7 +234,7 @@ export function ConditionMixPanel({ className }: { className?: string }) {
       }
       className={className}
     >
-      <QueryContent query={query} fallback={<Skeleton className="h-[42rem] w-full rounded-xl" />}>
+      <QueryContent query={query} fallback={<Skeleton className="h-[48rem] w-full rounded-xl" />}>
         {() => <MixList rows={rows ?? []} overall={data?.overall ?? 0} groupLabel={group.label} />}
       </QueryContent>
     </Panel>

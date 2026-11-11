@@ -73,8 +73,11 @@ function MonthlyColumns({ months }: { months: Month[] }) {
         {months.map((month, index) => (
           <span
             key={month.month}
-            // Every other month where the columns are too narrow for all twelve names.
-            className={cn("min-w-0 flex-1 text-center", index % 2 === 1 && "invisible @xs/cols:visible")}
+            // Every other month, counted back from this one, where all twelve names won't fit.
+            className={cn(
+              "min-w-0 flex-1 text-center",
+              (months.length - 1 - index) % 2 === 1 && "invisible @xs/cols:visible",
+            )}
           >
             {shortMonth.format(monthDate(month.month))}
           </span>

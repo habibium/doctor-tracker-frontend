@@ -2,10 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useQueryState } from "nuqs";
+import { formatShare } from "@/components/charts/chart-format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { GENDER_LABELS } from "@/features/patients/conditions";
-import { formatNumber, formatPercent } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 import { BarList } from "./bar-list";
 import { AgeChart, RegistrationsChart } from "./charts";
 import { ConditionCensus } from "./condition-census";
@@ -56,7 +57,7 @@ function Overview() {
           value={totals ? formatNumber(totals.criticalPatients) : <Skeleton className="h-9 w-20" />}
           detail={
             totals && totals.totalPatients > 0
-              ? `${formatPercent(totals.criticalPatients / totals.totalPatients)} of patients in care`
+              ? `${formatShare(totals.criticalPatients / totals.totalPatients)} of patients in care`
               : undefined
           }
         />
@@ -76,13 +77,13 @@ function Workload() {
           title="Patients per doctor"
           description={workload.data ? workloadFinding(workload.data) : "How the patient load is spread."}
         >
-          <QueryContent query={workload} fallback={<Skeleton className="h-[17.5rem] w-full rounded-xl" />}>
+          <QueryContent query={workload} fallback={<Skeleton className="h-[19rem] w-full rounded-xl" />}>
             {(data) => <WorkloadChart data={data} />}
           </QueryContent>
         </Panel>
 
         <Panel title="Busiest doctors" description="The doctors with the most patients in their care.">
-          <QueryContent query={topDoctors} fallback={<Skeleton className="h-72 w-full rounded-xl" />}>
+          <QueryContent query={topDoctors} fallback={<Skeleton className="h-[23.25rem] w-full rounded-xl" />}>
             {(doctors) => (
               <BarList
                 unit="patients"
@@ -116,7 +117,10 @@ function Critical() {
           title="Most critical patients"
           description="Doctors with the most patients in critical condition."
         >
-          <QueryContent query={criticalDoctors} fallback={<Skeleton className="h-72 w-full rounded-xl" />}>
+          <QueryContent
+            query={criticalDoctors}
+            fallback={<Skeleton className="h-[23.25rem] w-full rounded-xl" />}
+          >
             {(doctors) =>
               doctors.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No patient is in critical condition.</p>
@@ -229,7 +233,15 @@ function Arrivals() {
           }
           className="lg:col-span-4"
         >
-          <QueryContent query={intake} fallback={<Skeleton className="h-[30rem] w-full rounded-xl @2xl:h-72" />}>
+          <QueryContent
+            query={intake}
+            fallback={
+              // The heatmap turns on its side in narrow panels, so its placeholder does too.
+              <div className="@container">
+                <Skeleton className="h-[32rem] w-full rounded-xl @xl:h-[18.5rem]" />
+              </div>
+            }
+          >
             {(data) => <IntakeHeatmap data={data} timezone={timezone} />}
           </QueryContent>
         </Panel>
@@ -251,7 +263,7 @@ function Patients() {
         </Panel>
 
         <Panel title="Patients by gender">
-          <QueryContent query={demographics} fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
+          <QueryContent query={demographics} fallback={<Skeleton className="h-[5.25rem] w-full rounded-xl" />}>
             {(data) => (
               <BarList
                 compact
