@@ -19,7 +19,9 @@ export default function LoginPage() {
 
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-8 py-12">
           <div className="flex flex-col gap-2">
-            <h1 className="text-[2rem] leading-tight font-semibold tracking-tight">Sign in</h1>
+            <h1 className="text-[2rem] leading-tight font-semibold tracking-tight">
+              Sign in
+            </h1>
             <p className="text-pretty text-muted-foreground">
               Manage doctors and the patients in their care.
             </p>
@@ -50,7 +52,11 @@ export default function LoginPage() {
             ))}
           </svg>
           {/* Lazy, so phones, where this panel is hidden, never download it. */}
-          <Logo size={160} loading="lazy" className="absolute inset-0 m-auto" />
+          <Logo
+            size={160}
+            loading="lazy"
+            className="opacity-70 absolute inset-0 m-auto"
+          />
         </div>
 
         <div className="flex max-w-lg flex-col gap-4">
@@ -58,7 +64,8 @@ export default function LoginPage() {
             Every ward, every patient, read at a glance.
           </p>
           <p className="max-w-md text-lg text-pretty text-brand-panel-foreground/80">
-            Doctors, the patients in their care and how each one is doing, in one place.
+            Doctors, the patients in their care and how each one is doing, in
+            one place.
           </p>
         </div>
       </aside>
