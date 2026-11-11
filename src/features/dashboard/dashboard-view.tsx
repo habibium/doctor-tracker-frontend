@@ -8,7 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { GENDER_LABELS } from "@/features/patients/conditions";
 import { formatNumber } from "@/lib/format";
 import { BarList } from "./bar-list";
-import { AgeChart, RegistrationsChart } from "./charts";
+import { AgeChart, RegistrationsChart, registrationsFinding } from "./charts";
 import { ConditionCensus } from "./condition-census";
 import { ConditionMixPanel } from "./condition-mix";
 import { CoveragePanel } from "./coverage-matrix";
@@ -230,9 +230,11 @@ function Arrivals() {
         <Panel
           title="New patients"
           description={
-            range === "12m"
-              ? "Registered each month. This month is still in progress."
-              : "Registered each day. Today is still in progress."
+            registrations.data
+              ? registrationsFinding(registrations.data)
+              : range === "12m"
+                ? "Registered each month. This month is still in progress."
+                : "Registered each day. Today is still in progress."
           }
           className="lg:col-span-3 lg:row-span-2"
         >
@@ -259,6 +261,15 @@ function Arrivals() {
           className={dimmed}
           label={`Doctors who joined in ${period}`}
           value={totals ? formatNumber(totals.newDoctors) : <Skeleton className="h-9 w-16" />}
+          detail={
+            totals && (
+              <Delta
+                current={totals.newDoctors}
+                previous={totals.previousNewDoctors}
+                period={`the ${period.replace("the last ", "")} before`}
+              />
+            )
+          }
         />
 
         <Panel
