@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -18,32 +18,12 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email address"),
   password: z.string().min(1, "Enter your password"),
 });
 type LoginValues = z.infer<typeof loginSchema>;
-
-const DEMO_ACCOUNTS = [
-  {
-    label: "Admin",
-    access: "Full access",
-    email: "admin@doctortracker.dev",
-    password: "Admin@12345",
-    icon: ShieldCheckIcon,
-    chip: "bg-primary/10 text-primary dark:bg-primary/15",
-  },
-  {
-    label: "Viewer",
-    access: "Read only",
-    email: "viewer@doctortracker.dev",
-    password: "Viewer@12345",
-    icon: EyeIcon,
-    chip: "bg-accent text-accent-foreground",
-  },
-];
 
 /** Only same-site paths are followed, so `?next=` cannot send someone to another site. */
 function safeNext(next: string | null) {
@@ -65,14 +45,6 @@ export function LoginForm() {
     if (session) window.location.replace(next);
   }, [session, next]);
 
-  function fillDemoAccount(email: string, password: string) {
-    // Not reset(): it refills inputs only when they register again, and the React
-    // Compiler memoizes register(), so the fields would stay empty.
-    form.clearErrors();
-    form.setValue("email", email);
-    form.setValue("password", password);
-  }
-
   async function onSubmit(values: LoginValues) {
     const { error } = await authClient.signIn.email(values);
     if (!error) {
@@ -86,7 +58,9 @@ export function LoginForm() {
           ? "Too many attempts. Wait a minute, then try again."
           : error.status === 401
             ? "That email and password don't match an account."
-            : "Sign-in failed. Check your connection and try again.",
+            : error.code === "ACCOUNT_DEACTIVATED"
+              ? "This account has been deactivated. Ask an administrator to restore your access."
+              : "Sign-in failed. Check your connection and try again.",
     });
   }
 
@@ -139,33 +113,6 @@ export function LoginForm() {
         {isSubmitting && <Spinner data-icon="inline-start" />}
         Sign in
       </Button>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          Or try a demo account
-          <span className="h-px flex-1 bg-border" />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {DEMO_ACCOUNTS.map(({ label, access, email, password, icon: Icon, chip }) => (
-            <Button
-              key={email}
-              type="button"
-              variant="outline"
-              className="h-auto justify-start gap-3 rounded-2xl px-3 py-2.5 text-left"
-              onClick={() => fillDemoAccount(email, password)}
-            >
-              <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-xl", chip)}>
-                <Icon />
-              </span>
-              <span className="flex min-w-0 flex-col">
-                <span>{label}</span>
-                <span className="text-xs font-normal text-muted-foreground">{access}</span>
-              </span>
-            </Button>
-          ))}
-        </div>
-      </div>
     </form>
   );
 }
