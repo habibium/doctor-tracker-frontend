@@ -16,7 +16,11 @@ const loadParams = createLoader({ range: rangeParam });
 export default function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   return (
     <>
-      <PageHeader title="Dashboard" description="Patient load and new registrations across every doctor." />
+      <PageHeader
+        motif="dashboard"
+        title="Dashboard"
+        description="Patient load and new registrations across every doctor."
+      />
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardData searchParams={searchParams} />
       </Suspense>

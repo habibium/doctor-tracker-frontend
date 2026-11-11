@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { PageMotif } from "@/components/page-motif";
 import { UserProvider } from "@/components/user-provider";
 import { DoctorProfile, DoctorProfileSkeleton } from "@/features/doctors/doctor-profile";
 import { doctorQueries } from "@/features/doctors/queries";
@@ -17,9 +18,12 @@ export const metadata: Metadata = { title: "Doctor profile" };
 
 export default function DoctorPage(props: PageProps<"/doctors/[id]">) {
   return (
-    <Suspense fallback={<DoctorProfileSkeleton />}>
-      <DoctorData {...props} />
-    </Suspense>
+    <>
+      <PageMotif name="profile" />
+      <Suspense fallback={<DoctorProfileSkeleton />}>
+        <DoctorData {...props} />
+      </Suspense>
+    </>
   );
 }
 

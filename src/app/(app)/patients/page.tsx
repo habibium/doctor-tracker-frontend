@@ -19,13 +19,18 @@ export const metadata: Metadata = { title: "Patients" };
 export default function PatientsPage({ searchParams }: PageProps<"/patients">) {
   return (
     <>
-      <PageHeader title="Patients" description="Every patient on record, with their condition and doctor.">
-        <Suspense>
-          <AdminOnly>
-            <AddPatientButton />
-          </AdminOnly>
-        </Suspense>
-      </PageHeader>
+      <PageHeader
+        motif="patients"
+        title="Patients"
+        description="Every patient on record, with their condition and doctor."
+        primaryAction={
+          <Suspense>
+            <AdminOnly>
+              <AddPatientButton />
+            </AdminOnly>
+          </Suspense>
+        }
+      />
 
       <Suspense fallback={<ListFallback />}>
         <PatientsData searchParams={searchParams} />
