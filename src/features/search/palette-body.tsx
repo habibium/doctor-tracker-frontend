@@ -16,6 +16,7 @@ import {
   Rows4Icon,
   StethoscopeIcon,
   SunIcon,
+  UserCogIcon,
   UserRoundPlusIcon,
   UsersRoundIcon,
   XIcon,
@@ -67,6 +68,11 @@ const PAGES = [
   { href: "/dashboard", label: "Dashboard", keywords: "home overview analytics stats charts", icon: LayoutDashboardIcon },
   { href: "/doctors", label: "Doctors", keywords: "physicians staff list", icon: StethoscopeIcon },
   { href: "/patients", label: "Patients", keywords: "people list", icon: UsersRoundIcon },
+];
+
+/** Offered to admins only; the page itself turns viewers away. */
+const ADMIN_PAGES = [
+  { href: "/users", label: "Users", keywords: "accounts people staff access roles admins viewers passwords", icon: UserCogIcon },
 ];
 
 const THEMES: { value: Theme; label: string; keywords: string; icon: LucideIcon }[] = [
@@ -202,7 +208,9 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (request: FormRequest)
     })),
   ];
 
-  const pages = PAGES.filter((page) => matches(page.label, page.keywords));
+  const pages = [...PAGES, ...(role === "admin" ? ADMIN_PAGES : [])].filter((page) =>
+    matches(page.label, page.keywords),
+  );
   const shownActions = actions.filter((action) => matches(action.label, action.keywords));
   const shownPreferences = preferences.filter((option) => matches(option.label, option.keywords));
   const hasLocal = pages.length + shownActions.length + shownPreferences.length > 0;

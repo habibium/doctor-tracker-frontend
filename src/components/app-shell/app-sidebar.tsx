@@ -10,6 +10,7 @@ import {
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
   StethoscopeIcon,
+  UserCogIcon,
   UsersRoundIcon,
 } from "lucide-react";
 import { Logo, Wordmark } from "@/components/brand";
@@ -64,44 +65,76 @@ function useNavCounts() {
   return hydrated ? data : undefined;
 }
 
-function NavLinks({ pathname }: { pathname: string | null }) {
+function NavItem({
+  href,
+  label,
+  icon: Icon,
+  pathname,
+  total,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  pathname: string | null;
+  total?: string | null;
+}) {
   const { setOpenMobile } = useSidebar();
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        render={<Link href={href} />}
+        isActive={pathname === href || pathname?.startsWith(`${href}/`)}
+        tooltip={label}
+        aria-label={total ? `${label}, ${total}` : undefined}
+        onClick={() => setOpenMobile(false)}
+        className="data-active:bg-background data-active:text-foreground data-active:shadow-xs data-active:[&_svg]:text-brand-mint"
+      >
+        <Icon />
+        <span>{label}</span>
+      </SidebarMenuButton>
+      {total && (
+        <SidebarMenuBadge
+          aria-hidden="true"
+          className="right-2 font-normal text-muted-foreground peer-hover/menu-button:text-muted-foreground peer-data-active/menu-button:text-muted-foreground peer-data-[size=default]/menu-button:top-2"
+        >
+          {total}
+        </SidebarMenuBadge>
+      )}
+    </SidebarMenuItem>
+  );
+}
+
+function NavLinks({ pathname, children }: { pathname: string | null; children?: ReactNode }) {
   const counts = useNavCounts();
 
   return (
     <SidebarMenu>
-      {NAV_ITEMS.map(({ href, label, icon: Icon, count }) => {
-        const total = count && counts ? formatNumber(counts[count]) : null;
-        return (
-          <SidebarMenuItem key={href}>
-            <SidebarMenuButton
-              render={<Link href={href} />}
-              isActive={pathname === href || pathname?.startsWith(`${href}/`)}
-              tooltip={label}
-              aria-label={total ? `${label}, ${total}` : undefined}
-              onClick={() => setOpenMobile(false)}
-              className="data-active:bg-background data-active:text-foreground data-active:shadow-xs data-active:[&_svg]:text-brand-mint"
-            >
-              <Icon />
-              <span>{label}</span>
-            </SidebarMenuButton>
-            {total && (
-              <SidebarMenuBadge
-                aria-hidden="true"
-                className="right-2 font-normal text-muted-foreground peer-hover/menu-button:text-muted-foreground peer-data-active/menu-button:text-muted-foreground peer-data-[size=default]/menu-button:top-2"
-              >
-                {total}
-              </SidebarMenuBadge>
-            )}
-          </SidebarMenuItem>
-        );
-      })}
+      {NAV_ITEMS.map(({ href, label, icon, count }) => (
+        <NavItem
+          key={href}
+          href={href}
+          label={label}
+          icon={icon}
+          pathname={pathname}
+          total={count && counts ? formatNumber(counts[count]) : null}
+        />
+      ))}
+      {children}
     </SidebarMenu>
   );
 }
 
-function ActiveNavLinks() {
-  return <NavLinks pathname={usePathname()} />;
+function ActiveNavLinks({ children }: { children?: ReactNode }) {
+  return <NavLinks pathname={usePathname()}>{children}</NavLinks>;
+}
+
+/**
+ * Links only admins get. The layout renders this inside `AdminOnly`, so it streams in with
+ * the session after the static shell, below the other links, where it moves nothing.
+ */
+export function AdminNavLinks() {
+  return <NavItem href="/users" label="Users" icon={UserCogIcon} pathname={usePathname()} />;
 }
 
 function BrandLink() {
@@ -153,8 +186,8 @@ function SidebarControls() {
   );
 }
 
-/** `footer` is rendered by the server, so the sidebar itself needs no session data. */
-export function AppSidebar({ footer }: { footer: ReactNode }) {
+/** `adminLinks` and `footer` are rendered by the server, so the sidebar needs no session data. */
+export function AppSidebar({ adminLinks, footer }: { adminLinks: ReactNode; footer: ReactNode }) {
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader className="pb-0">
@@ -174,8 +207,8 @@ export function AppSidebar({ footer }: { footer: ReactNode }) {
         <SidebarGroup className="pt-1">
           <SidebarGroupContent>
             {/* The path is unknown while the shell prerenders, so links start unhighlighted. */}
-            <Suspense fallback={<NavLinks pathname={null} />}>
-              <ActiveNavLinks />
+            <Suspense fallback={<NavLinks pathname={null}>{adminLinks}</NavLinks>}>
+              <ActiveNavLinks>{adminLinks}</ActiveNavLinks>
             </Suspense>
           </SidebarGroupContent>
         </SidebarGroup>

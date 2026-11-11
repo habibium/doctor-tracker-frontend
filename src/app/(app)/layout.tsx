@@ -1,15 +1,15 @@
 import { type ReactNode, Suspense } from "react";
-import { AppSidebar } from "@/components/app-shell/app-sidebar";
+import { AdminNavLinks, AppSidebar } from "@/components/app-shell/app-sidebar";
 import { MobileTopBar } from "@/components/app-shell/site-header";
 import { UserMenuSkeleton } from "@/components/app-shell/user-menu";
-import { CurrentUserMenu } from "@/components/current-user";
+import { AdminOnly, CurrentUserMenu } from "@/components/current-user";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { CommandPalette } from "@/features/search/command-palette";
 
 /**
  * The sidebar sits on a tinted plane and the page is one rounded panel that scrolls on
- * its own. Nothing here is request-specific, so it is prerendered; only the user menu
- * waits for the session lookup.
+ * its own. Nothing here is request-specific, so it is prerendered; only the user menu and
+ * the admin-only links wait for the session lookup.
  *
  * Below `md` the document scrolls instead, and the panel is the page background itself:
  * no ancestor of the content may form a stacking context there, or the primary action
@@ -28,6 +28,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <AppSidebar
+        adminLinks={
+          <Suspense>
+            <AdminOnly>
+              <AdminNavLinks />
+            </AdminOnly>
+          </Suspense>
+        }
         footer={
           <Suspense fallback={<UserMenuSkeleton />}>
             <CurrentUserMenu />
