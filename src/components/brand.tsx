@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { crossPath } from "@/components/page-motif";
 import { cn } from "@/lib/utils";
 
 /** The logo mark. Decorative wherever the wordmark or a label names it. */
@@ -53,5 +54,24 @@ export function BrandLockup({
       <Logo size={logo} />
       <Wordmark className={cn(text, wordmarkClassName)} />
     </span>
+  );
+}
+
+const MISSING_CROSS = crossPath(48, 48, 80, 16, 12, 5);
+
+/** The logo's cross drawn as a dashed outline: something that should be here is not. */
+export function MissingMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 96 96" aria-hidden="true" className={cn("size-20", className)}>
+      <path d={MISSING_CROSS} className="fill-primary/8" />
+      <path
+        d={MISSING_CROSS}
+        fill="none"
+        strokeWidth="2.5"
+        strokeDasharray="7 6"
+        strokeLinecap="round"
+        className="stroke-primary"
+      />
+    </svg>
   );
 }
