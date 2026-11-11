@@ -189,6 +189,7 @@ function PatientsToolbar({ doctorId }: { doctorId?: string }) {
     setParams({
       condition: null,
       gender: null,
+      diagnosis: null,
       from: null,
       to: null,
       page: null,
@@ -210,6 +211,14 @@ function PatientsToolbar({ doctorId }: { doctorId?: string }) {
       label: "Gender",
       value: GENDER_LABELS[params.gender],
       onRemove: () => void setParams({ gender: null, page: null }),
+    });
+  }
+  if (params.diagnosis) {
+    chips.push({
+      key: "diagnosis",
+      label: "Diagnosis",
+      value: params.diagnosis,
+      onRemove: () => void setParams({ diagnosis: null, page: null }),
     });
   }
   if (filterDoctorId) {

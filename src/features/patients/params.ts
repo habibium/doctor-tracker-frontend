@@ -29,6 +29,7 @@ export const patientParams = {
   condition: parseAsStringLiteral(CONDITION_VALUES),
   gender: parseAsStringLiteral(GENDER_VALUES),
   doctorId: parseAsString,
+  diagnosis: parseAsString,
 };
 
 export const loadPatientParams = createLoader(patientParams);
@@ -38,6 +39,8 @@ export type PatientParams = Awaited<ReturnType<typeof loadPatientParams>>;
 export function toPatientQuery(params: PatientParams): PatientListQuery {
   const search = searchTerm(params.search);
   const doctorId = recordId(params.doctorId);
+  // The API caps a diagnosis at 200 characters; a longer one cannot match anything anyway.
+  const diagnosis = params.diagnosis?.trim().slice(0, 200);
   return {
     page: Math.max(1, params.page),
     limit: params.limit,
@@ -46,6 +49,7 @@ export function toPatientQuery(params: PatientParams): PatientListQuery {
     ...(params.condition && { condition: params.condition }),
     ...(params.gender && { gender: params.gender }),
     ...(doctorId && { doctorId }),
+    ...(diagnosis && { diagnosis }),
     ...dateRangeQuery(params.from, params.to),
   };
 }
