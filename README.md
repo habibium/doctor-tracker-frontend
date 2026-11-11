@@ -9,7 +9,7 @@ Doctor Tracker is an admin portal for clinics that need to see, at a glance, who
 | A doctor's page | Contact details, three charts about that doctor's patients, and their patient list with its own search, filters and sorting. Add a patient under the doctor, edit one, or delete one from the list. |
 | Patients | Every patient, with search by name, diagnosis or phone, filters for condition, gender, doctor and registration date, sorting (including by severity), paging, edit and delete. |
 | Dashboard | Totals, patients per doctor, the condition breakdown, how evenly the load is spread, where the critical patients are, registrations over time and by weekday and hour, age and gender. |
-| Everywhere | A command palette on `⌘K` / `Ctrl K`, light and dark themes, and layouts for phone, tablet and desktop. |
+| Everywhere | A command palette on `⌘K` / `Ctrl K`, live doctor and patient counts in the sidebar, light and dark themes, and layouts for phone, tablet and desktop. |
 
 ## Stack
 
@@ -178,7 +178,9 @@ The trade-off is more moving parts than a client-only app: query keys must match
 - **Columns can be pinned.** Any column can be pinned to the left or right from its header menu and stays in place while the rest scroll under it. The name and the actions are pinned by default, and the choice is remembered per table. An edge shadow appears only while something is scrolled underneath.
 - **The row's edge is the patient's condition.** A coloured strip runs down the leading edge of every patient row and stays put during sideways scroll, so a column of red is visible before any text is read. The Condition column still names it in words.
 - **One menu, three ways in.** A row's actions are defined once and rendered by both the three-dot button and a right-click menu, so the two cannot drift apart. Links, form fields and selected text keep the browser's own menu. `Shift F10` and long-press open it as well.
-- **Cards below 768 px.** A seven-column table on a phone is a scrolling exercise, so each row becomes a card there and a dropdown takes over sorting.
+- **Only the rows scroll.** On the Doctors and Patients pages the card is held to the height of the window, so the search bar, the column headers and the pagination stay where they are and the rows scroll between them. One element scrolls in both directions, which is what lets the headers stick to the top while pinned columns stick to the side. The scrollbar's gutter is reserved, so a scrollbar appearing cannot push a column out of view.
+- **Filters live in a sheet.** The toolbar is one row: search, a Filters button and row spacing. The sheet slides in from the right on desktop and up from the bottom on a phone. Filters apply as they are changed, the list stays visible behind the sheet, and its main button says what you will get ("Show 42 doctors"). Each active filter is also a chip above the table that removes it in one click.
+- **Cards below 768 px.** A seven-column table on a phone is a scrolling exercise, so each row becomes a card there, and sorting moves into the filter sheet.
 
 **Command palette**
 
@@ -199,7 +201,9 @@ The trade-off is more moving parts than a client-only app: query keys must match
 **Look and layout**
 
 - **The theme comes from the logo.** Its blue and mint are the two brand colours, each with a light-theme and a dark-theme shade chosen for contrast, and the wordmark is set in the same two colours.
-- **An inset shell.** The sidebar sits on a tinted plane and the page is one rounded panel beside it, with no top bar on desktop. Search, theme and the collapse control live in the sidebar.
+- **Blue acts, mint marks.** Each brand colour has one job. Blue is for actions, focus and data: buttons, links, focus rings and chart marks. Mint is for state: what is selected (a toggle, the current page, the active sort), what is highlighted (the item under the pointer in a menu or the command palette), filter chips and tags, and a rise in a trend. Mint is kept out of the charts on purpose: darkened enough to read on white, it lands on the green that means "stable".
+- **An inset shell.** The sidebar sits on a tinted plane that runs from the logo's blue at the top to its mint at the bottom, and the page is one rounded panel beside it, with no top bar on desktop. Search, theme and the collapse control live in the sidebar.
+- **An icon for every specialization.** All fifteen come from one family, Health Icons (CC0), in its outline set drawn for 24 px, so they match each other and sit beside the interface's own icons. Only the glyphs in use are in the code, not the whole library, and a specialization the set does not know falls back to a plain medical cross.
 - **Each page has its own header artwork**, drawn in SVG from the logo's cross: a heartbeat trace on the dashboard, a field of crosses for doctors, a ward board for patients. It is part of the prerendered shell and downloads nothing.
 - **On phones** the sidebar becomes a drawer, and a top bar holds the menu button, the logo and the page's main action, so "Add patient" is always one tap away.
 
@@ -225,17 +229,21 @@ The trade-off is more moving parts than a client-only app: query keys must match
 | --- | --- |
 | ![Doctors list with patient counts and condition bars](docs/screenshots/desktop-doctors.png) | ![A doctor's charts and patient list](docs/screenshots/desktop-doctor-profile.png) |
 
-| Patients, critical first | Sorting and pinning |
+| Patients, critical first | Filter sheet |
 | --- | --- |
-| ![Patients list sorted by severity with coloured row edges](docs/screenshots/desktop-patients.png) | ![Column menu with sort and pin options over a table scrolled sideways](docs/screenshots/desktop-patients-pinned.png) |
+| ![Patients list sorted by severity with coloured row edges](docs/screenshots/desktop-patients.png) | ![Filters in a sheet beside the list, with chips for the active ones](docs/screenshots/desktop-filters.png) |
 
-| Right-click menu | Command palette |
+| Sorting and pinning | Right-click menu |
 | --- | --- |
-| ![A row's actions opened by right click](docs/screenshots/desktop-patients-context-menu.png) | ![Searching doctors and patients from the command palette](docs/screenshots/desktop-command-palette.png) |
+| ![Column menu with sort and pin options over a table scrolled sideways](docs/screenshots/desktop-patients-pinned.png) | ![A row's actions opened by right click](docs/screenshots/desktop-patients-context-menu.png) |
 
-| Patients, dark theme | Sign in |
+| Command palette | Patients, dark theme |
 | --- | --- |
-| ![Critical patients sorted by age in the dark theme](docs/screenshots/desktop-patients-dark.png) | ![Sign-in page with demo accounts](docs/screenshots/desktop-login.png) |
+| ![Searching doctors and patients from the command palette](docs/screenshots/desktop-command-palette.png) | ![Critical patients sorted by age in the dark theme](docs/screenshots/desktop-patients-dark.png) |
+
+| Sign in |
+| --- |
+| ![Sign-in page with demo accounts](docs/screenshots/desktop-login.png) |
 
 ### Mobile
 
@@ -243,6 +251,6 @@ The trade-off is more moving parts than a client-only app: query keys must match
 | --- | --- | --- | --- |
 | ![Dashboard on a phone](docs/screenshots/mobile-dashboard.png) | ![Condition mix on a phone](docs/screenshots/mobile-condition-mix.png) | ![Heatmap turned on its side for a phone](docs/screenshots/mobile-heatmap.png) | ![Navigation drawer on a phone](docs/screenshots/mobile-navigation.png) |
 
-| Doctors | Patients | Doctor profile |
-| --- | --- | --- |
-| ![Doctors as cards on a phone](docs/screenshots/mobile-doctors.png) | ![Patients as cards on a phone](docs/screenshots/mobile-patients.png) | ![A doctor's profile on a phone](docs/screenshots/mobile-doctor-profile.png) |
+| Doctors | Patients | Filters | Doctor profile |
+| --- | --- | --- | --- |
+| ![Doctors as cards on a phone](docs/screenshots/mobile-doctors.png) | ![Patients as cards on a phone](docs/screenshots/mobile-patients.png) | ![Sort and filter in a bottom sheet on a phone](docs/screenshots/mobile-filters.png) | ![A doctor's profile on a phone](docs/screenshots/mobile-doctor-profile.png) |
