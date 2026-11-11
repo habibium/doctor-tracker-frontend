@@ -62,6 +62,14 @@ export function LoginForm() {
     if (session) window.location.replace(next);
   }, [session, next]);
 
+  function fillDemoAccount(email: string, password: string) {
+    // Not reset(): it refills inputs only when they register again, and the React
+    // Compiler memoizes register(), so the fields would stay empty.
+    form.clearErrors();
+    form.setValue("email", email);
+    form.setValue("password", password);
+  }
+
   async function onSubmit(values: LoginValues) {
     const { error } = await authClient.signIn.email(values);
     if (!error) {
@@ -142,7 +150,7 @@ export function LoginForm() {
               type="button"
               variant="outline"
               className="h-auto justify-start gap-3 rounded-2xl px-3 py-2.5 text-left"
-              onClick={() => form.reset({ email, password })}
+              onClick={() => fillDemoAccount(email, password)}
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15">
                 <Icon />
