@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import { formatShare } from "@/components/charts/chart-format";
@@ -140,9 +141,13 @@ function MixList({
                 <SpecializationIcon name={row.key} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               )}
               <div className="flex min-w-0 flex-col">
-                <span className="truncate font-medium" title={row.key}>
+                <Link
+                  href={`/doctors?${new URLSearchParams({ [group.value]: row.key, sort: "-patientCount" })}`}
+                  className="truncate font-medium underline-offset-4 hover:underline"
+                  title={`${row.key}: see its doctors`}
+                >
                   {row.key}
-                </span>
+                </Link>
                 <span className="truncate text-xs text-muted-foreground">
                   {formatNumber(row.doctors)} {row.doctors === 1 ? "doctor" : "doctors"}
                   {row.doctors > 0 && `, ${formatNumber(Math.round(row.patients / row.doctors))} patients each`}
