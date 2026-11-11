@@ -21,9 +21,11 @@ interface BarListProps {
   unit: string;
   /** Narrower label column, for short labels in a narrow panel. */
   compact?: boolean;
+  /** Fill class; a condition colour only when every bar counts patients in that condition. */
+  fill?: string;
 }
 
-export function BarList({ items, unit, compact = false }: BarListProps) {
+export function BarList({ items, unit, compact = false, fill = "bg-data" }: BarListProps) {
   const max = Math.max(1, ...items.map((item) => item.value));
 
   return (
@@ -51,10 +53,12 @@ export function BarList({ items, unit, compact = false }: BarListProps) {
             )}
           </div>
           <div className="h-2.5" aria-hidden="true">
-            <div
-              className="h-full min-w-0.5 rounded-r bg-data"
-              style={{ width: `${(item.value / max) * 100}%` }}
-            />
+            {item.value > 0 && (
+              <div
+                className={cn("h-full min-w-0.5 rounded-r", fill)}
+                style={{ width: `${(item.value / max) * 100}%` }}
+              />
+            )}
           </div>
           <span className="tabular text-right">
             {formatNumber(item.value)}

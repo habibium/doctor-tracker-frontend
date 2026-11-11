@@ -1,11 +1,45 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, type RefCallback, useCallback, useId, useState } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { RefreshCwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { errorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
+
+/**
+ * Cells sit on a 1px grid gap over the border colour, which draws a hairline between
+ * every pair of neighbours however the grid wraps.
+ */
+export const BOARD = "grid gap-px overflow-hidden rounded-2xl border bg-border";
+
+interface SectionProps {
+  /** The question this part of the page answers. */
+  title: string;
+  description?: ReactNode;
+  /** A control that scopes everything in the section. */
+  action?: ReactNode;
+  children: ReactNode;
+  ref?: RefCallback<HTMLElement>;
+}
+
+export function Section({ title, description, action, children, ref }: SectionProps) {
+  const id = useId();
+  return (
+    <section ref={ref} aria-labelledby={id} className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+        <div className="flex flex-col gap-0.5">
+          <h2 id={id} className="text-base font-semibold tracking-tight">
+            {title}
+          </h2>
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
 
 interface PanelProps {
   title: string;
@@ -19,16 +53,16 @@ interface PanelProps {
 /** One cell of the dashboard board. The board draws the hairlines between cells. */
 export function Panel({ title, description, action, className, children }: PanelProps) {
   return (
-    <section className={cn("flex min-w-0 flex-col gap-5 bg-card p-5 md:p-6", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-5 bg-card p-5 md:p-6", className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-medium">{title}</h2>
+        <div className="flex min-w-0 flex-col gap-1">
+          <h3 className="font-medium">{title}</h3>
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
         {action}
       </div>
       {children}
-    </section>
+    </div>
   );
 }
 
@@ -66,4 +100,27 @@ export function QueryContent<T>({ query, fallback, children }: QueryContentProps
       {children(query.data)}
     </div>
   );
+}
+
+/**
+ * Turns true once the element comes within a screen of the viewport, and stays true.
+ * Gates queries for panels far down the page; their skeletons hold the space meanwhile.
+ */
+export function useNearViewport<T extends Element>(): [RefCallback<T>, boolean] {
+  const [near, setNear] = useState(false);
+  const ref = useCallback((node: T | null) => {
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setNear(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, near];
 }
