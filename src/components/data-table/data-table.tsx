@@ -67,19 +67,16 @@ const NO_ACTIONS: RowActionGroups = [];
 const getRowId = (row: RowRecord) => row.id;
 
 interface RowActionsContextValue {
-  getActions: (row: never) => RowActionGroups;
-  getLabel: (row: never) => string;
+  getActions: (row: RowRecord) => RowActionGroups;
+  getLabel: (row: RowRecord) => string;
 }
+/** Lets the module-scope actions column reach the list's per-row actions. */
 const RowActionsContext = createContext<RowActionsContextValue | null>(null);
 
 function RowActionsCell({ row }: { row: RowRecord }) {
   const context = use(RowActionsContext);
   if (!context) return null;
-  const { getActions, getLabel } = context as unknown as {
-    getActions: (row: RowRecord) => RowActionGroups;
-    getLabel: (row: RowRecord) => string;
-  };
-  return <RowActionsMenu groups={getActions(row)} label={getLabel(row)} />;
+  return <RowActionsMenu groups={context.getActions(row)} label={context.getLabel(row)} />;
 }
 
 /** The three-dot column. It always stays pinned to the end, so the actions are never off screen. */
@@ -429,6 +426,7 @@ export function DataTable<TData extends RowRecord, TField extends string>({
   return (
     <RowActionsContext
       value={{
+        // Only ever called with rows of this table.
         getActions: actionsOf as RowActionsContextValue["getActions"],
         getLabel: getActionsLabel as RowActionsContextValue["getLabel"],
       }}
