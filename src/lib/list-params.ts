@@ -63,13 +63,16 @@ export const parseSort = (sort: string) =>
 export const toSort = <TField extends string>(field: TField, desc: boolean): SortValue<TField> =>
   desc ? `-${field}` : field;
 
+/** "Newest first" becomes "newest first"; "A to Z" keeps its capitals. */
+const midSentence = (phrase: string) => phrase.replace(/^[A-Z](?=[a-z])/, (letter) => letter.toLowerCase());
+
 /** Both directions of every sortable column, for the card view, which has no headers. */
 export function sortOptions<TField extends string>(columns: SortableColumns<TField>) {
   return Object.values(columns).flatMap(({ field, label, kind }) => {
     const { asc, desc, descFirst } = SORT_KINDS[kind];
     const options = [
-      { value: toSort(field, false), label: `${label}, ${asc.toLowerCase()}` },
-      { value: toSort(field, true), label: `${label}, ${desc.toLowerCase()}` },
+      { value: toSort(field, false), label: `${label}, ${midSentence(asc)}` },
+      { value: toSort(field, true), label: `${label}, ${midSentence(desc)}` },
     ];
     return descFirst ? options.reverse() : options;
   });

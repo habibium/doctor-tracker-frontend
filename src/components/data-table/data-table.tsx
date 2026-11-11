@@ -197,6 +197,7 @@ export function DataTable<TData extends RowRecord, TField extends string>({
 
   const pendingRowId = useRef<string | undefined>(undefined);
   const nativeMenu = useRef(false);
+  const returnFocus = useRef<HTMLElement | null>(null);
   const [menuRowId, setMenuRowId] = useState<string>();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -274,6 +275,10 @@ export function DataTable<TData extends RowRecord, TField extends string>({
       return;
     }
     pendingRowId.current = rowId;
+    const focused = document.activeElement;
+    // The trigger is not focusable, so closing would otherwise drop focus on the page.
+    returnFocus.current =
+      focused instanceof HTMLElement && event.currentTarget.contains(focused) ? focused : null;
   }
 
   function handleTouchStartCapture(event: TouchEvent) {
@@ -361,7 +366,8 @@ export function DataTable<TData extends RowRecord, TField extends string>({
                     className={cn(
                       "group/head relative h-10 border-b px-4 text-xs font-medium text-muted-foreground",
                       align === "end" && "text-right",
-                      pin?.pinned && (align === "end" ? "ps-10" : "pe-10"),
+                      // Touch screens always show the menu button, so keep the label clear of it.
+                      pin && (align === "end" ? "pointer-coarse:ps-9" : "pointer-coarse:pe-9"),
                       column.columnDef.meta?.className,
                       className,
                     )}
@@ -446,7 +452,7 @@ export function DataTable<TData extends RowRecord, TField extends string>({
               {cards}
               {grid}
             </ContextMenuTrigger>
-            <ContextMenuContent>
+            <ContextMenuContent finalFocus={() => returnFocus.current ?? true}>
               {menuRow && <RowActionItems groups={actionsOf(menuRow.original)} menu="context" />}
             </ContextMenuContent>
           </ContextMenu>

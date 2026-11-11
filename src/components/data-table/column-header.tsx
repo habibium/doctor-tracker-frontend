@@ -57,7 +57,7 @@ export function ColumnHeader({ children, name, align = "start", sort, pin }: Col
     sort?.direction === "asc" ? ArrowUpIcon : sort?.direction === "desc" ? ArrowDownIcon : ArrowUpDownIcon;
 
   return (
-    <div className={cn("flex min-w-0 items-center", align === "end" && "justify-end")}>
+    <div className={cn("flex min-w-0 items-center gap-1", align === "end" && "flex-row-reverse")}>
       {sort ? (
         <button
           type="button"
@@ -81,6 +81,7 @@ export function ColumnHeader({ children, name, align = "start", sort, pin }: Col
       ) : (
         <span className="truncate">{children}</span>
       )}
+      {pin?.pinned && <PinIcon aria-hidden="true" className="size-3 shrink-0 text-foreground/70" />}
       {pin && <ColumnMenu name={name} align={align} sort={sort} pin={pin} />}
     </div>
   );
@@ -113,16 +114,13 @@ function ColumnMenu({
             size="icon-xs"
             aria-label={label}
             className={cn(
-              "absolute top-1/2 -translate-y-1/2 bg-(--row-bg)",
+              "absolute top-1/2 -translate-y-1/2 bg-(--row-bg) text-muted-foreground opacity-0 group-hover/head:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 pointer-coarse:opacity-100",
               align === "end" ? "start-1.5" : "end-1.5",
-              pinned
-                ? "text-foreground"
-                : "text-muted-foreground opacity-0 group-hover/head:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 pointer-coarse:opacity-100",
             )}
           />
         }
       >
-        {pinned ? <PinIcon /> : <EllipsisVerticalIcon />}
+        <EllipsisVerticalIcon />
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align === "end" ? "start" : "end"} className="w-auto">
         {sort && directions && (
