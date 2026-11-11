@@ -12,6 +12,8 @@ Doctor Tracker is an admin portal for clinics that need to see, at a glance, who
 | Dashboard | Totals, patients per doctor, the condition breakdown, how evenly the load is spread, which hospitals lack which specialists, where the critical patients are, registrations over time and by weekday and hour with public holidays marked, the most common diagnoses, seasonal illness against last year, age and gender. |
 | Everywhere | A command palette on `⌘K` / `Ctrl K`, live doctor and patient counts in the sidebar, light and dark themes, and layouts for phone, tablet and desktop. |
 
+**Live:** https://doctor-tracker.habibium.com, backed by the API at https://doctor-tracker-api.habibium.com ([API docs](https://doctor-tracker-api.habibium.com/docs)). Sign-in details are in the submission email.
+
 ## Stack
 
 - **Framework:** Next.js 16 (App Router, Cache Components, React Compiler) and React 19
