@@ -8,6 +8,9 @@ export type DoctorSort = NonNullable<DoctorListQuery["sort"]>;
 /** Columns the API can sort by, keyed by column id; one line makes a header sortable. */
 export const DOCTOR_SORTABLE = sortableColumns<DoctorSort>()({
   doctor: { field: "name", label: "Name", kind: "text" },
+  specialization: { field: "specialization", label: "Specialization", kind: "text" },
+  hospital: { field: "hospital", label: "Hospital", kind: "text" },
+  patientCount: { field: "patientCount", label: "Patients", kind: "number" },
   createdAt: { field: "createdAt", label: "Added", kind: "date" },
 });
 
