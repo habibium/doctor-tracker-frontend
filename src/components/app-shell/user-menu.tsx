@@ -60,7 +60,7 @@ export function UserMenu({ user }: { user: CurrentUser }) {
             </span>
             <ChevronsUpDownIcon className="ml-auto text-sidebar-foreground/60" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="min-w-60">
+          <DropdownMenuContent side="top" align="start" className="min-w-56">
             <DropdownMenuGroup>
               <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
                 {user.email}

@@ -191,7 +191,7 @@ function WardMotif() {
           />
         </pattern>
       </defs>
-      <rect width={W} height={H} fill="url(#motif-ward)" className="text-motif-mint opacity-25 dark:opacity-20" />
+      <rect width={W} height={H} fill="url(#motif-ward)" className="text-motif-mint opacity-25 dark:opacity-[0.13]" />
       {BEDS.map((bed, index) => (
         <rect
           key={index}
@@ -201,9 +201,9 @@ function WardMotif() {
           height={BED}
           rx="6"
           className={cn(
-            bed.tone === "blue" && "fill-motif-blue opacity-35",
-            bed.tone === "mint" && "fill-motif-mint opacity-45 dark:opacity-40",
-            bed.tone === "mint-soft" && "fill-motif-mint opacity-[0.16] dark:opacity-[0.14]",
+            bed.tone === "blue" && "fill-motif-blue opacity-35 dark:opacity-30",
+            bed.tone === "mint" && "fill-motif-mint opacity-45 dark:opacity-30",
+            bed.tone === "mint-soft" && "fill-motif-mint opacity-[0.16] dark:opacity-[0.1]",
           )}
         />
       ))}

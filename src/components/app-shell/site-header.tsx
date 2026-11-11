@@ -36,7 +36,7 @@ export function MobileTopBar() {
       <Link
         href="/dashboard"
         aria-label="Doctor Tracker, go to the dashboard"
-        className="flex min-w-0 rounded-lg ring-ring outline-none focus-visible:ring-2 max-[379px]:group-has-[[data-primary-action]_button]/sidebar-wrapper:hidden"
+        className="flex min-w-0 rounded-lg ring-ring outline-none focus-visible:ring-2 max-[359px]:group-has-[[data-primary-action]_button]/sidebar-wrapper:hidden"
       >
         <BrandLockup size="sm" />
       </Link>
