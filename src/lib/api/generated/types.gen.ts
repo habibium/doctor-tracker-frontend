@@ -66,8 +66,19 @@ export type Doctor = {
     email: string;
     id: string;
     patientCount: number;
+    conditionCounts: ConditionCounts;
     createdAt: string;
     updatedAt: string;
+};
+
+/**
+ * Patients in each condition, zeros included
+ */
+export type ConditionCounts = {
+    stable: number;
+    recovering: number;
+    under_observation: number;
+    critical: number;
 };
 
 export type PaginationMeta = {
@@ -145,6 +156,25 @@ export type Registrations = {
     }>;
 };
 
+export type IntakeHours = {
+    range: '7d' | '30d' | '90d' | '12m';
+    /**
+     * All 168 cells, Sunday 00:00 first, then by hour
+     */
+    cells: Array<{
+        /**
+         * 0 is Sunday
+         */
+        weekday: number;
+        hour: number;
+        patients: number;
+    }>;
+    /**
+     * The largest cell, for scaling a heatmap
+     */
+    max: number;
+};
+
 export type PatientsPerDoctor = Array<{
     doctorId: string;
     name: string;
@@ -158,11 +188,43 @@ export type ConditionBreakdown = Array<{
     patients: number;
 }>;
 
+export type ConditionMix = Array<{
+    /**
+     * The specialization or hospital
+     */
+    key: string;
+    doctors: number;
+    patients: number;
+    stable: number;
+    recovering: number;
+    under_observation: number;
+    critical: number;
+}>;
+
 export type SpecializationBreakdown = Array<{
     specialization: string;
     doctors: number;
     patients: number;
 }>;
+
+export type Workload = {
+    doctors: number;
+    average: number;
+    median: number;
+    /**
+     * Nearest-rank 90th percentile
+     */
+    p90: number;
+    max: number;
+    /**
+     * 8 to 12 equal-width bins from 0 up to the busiest doctor; bounds inclusive
+     */
+    buckets: Array<{
+        min: number;
+        max: number;
+        doctors: number;
+    }>;
+};
 
 export type Demographics = {
     genders: Array<{
@@ -171,6 +233,28 @@ export type Demographics = {
     }>;
     ageGroups: Array<{
         group: string;
+        patients: number;
+    }>;
+};
+
+export type DoctorAnalytics = {
+    conditions: ConditionCounts;
+    /**
+     * The last 12 calendar months, oldest first
+     */
+    monthly: Array<{
+        /**
+         * YYYY-MM
+         */
+        month: string;
+        patients: number;
+    }>;
+    ageGroups: Array<{
+        group: string;
+        patients: number;
+    }>;
+    genders: Array<{
+        gender: Gender;
         patients: number;
     }>;
 };
@@ -195,7 +279,10 @@ export type ListDoctorsData = {
          * Created on or before this date
          */
         to?: string;
-        sort?: '-createdAt' | 'createdAt' | 'name' | '-name';
+        /**
+         * A leading `-` sorts descending
+         */
+        sort?: 'createdAt' | '-createdAt' | 'name' | '-name' | 'specialization' | '-specialization' | 'hospital' | '-hospital' | 'patientCount' | '-patientCount';
     };
     url: '/api/v1/doctors';
 };
@@ -427,7 +514,10 @@ export type ListDoctorPatientsData = {
          * Created on or before this date
          */
         to?: string;
-        sort?: '-createdAt' | 'createdAt' | 'name' | '-name';
+        /**
+         * A leading `-` sorts descending. `condition` sorts by severity, so `-condition` lists critical first
+         */
+        sort?: 'createdAt' | '-createdAt' | 'name' | '-name' | 'age' | '-age' | 'condition' | '-condition';
     };
     url: '/api/v1/doctors/{id}/patients';
 };
@@ -557,7 +647,10 @@ export type ListPatientsData = {
          * Created on or before this date
          */
         to?: string;
-        sort?: '-createdAt' | 'createdAt' | 'name' | '-name';
+        /**
+         * A leading `-` sorts descending. `condition` sorts by severity, so `-condition` lists critical first
+         */
+        sort?: 'createdAt' | '-createdAt' | 'name' | '-name' | 'age' | '-age' | 'condition' | '-condition';
         doctorId?: string;
     };
     url: '/api/v1/patients';
@@ -778,6 +871,10 @@ export type GetRegistrationsData = {
          */
         range?: '7d' | '30d' | '90d' | '12m';
         /**
+         * `auto` groups 12m by month and shorter ranges by day
+         */
+        interval?: 'auto' | 'day' | 'month';
+        /**
          * Time zone used to group records into days and months
          */
         timezone?: string;
@@ -807,11 +904,53 @@ export type GetRegistrationsResponses = {
 
 export type GetRegistrationsResponse = GetRegistrationsResponses[keyof GetRegistrationsResponses];
 
+export type GetIntakeHoursData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Reporting window ending now
+         */
+        range?: '7d' | '30d' | '90d' | '12m';
+        /**
+         * Time zone used to read each registration's weekday and hour
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/analytics/intake-hours';
+};
+
+export type GetIntakeHoursErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+};
+
+export type GetIntakeHoursError = GetIntakeHoursErrors[keyof GetIntakeHoursErrors];
+
+export type GetIntakeHoursResponses = {
+    /**
+     * A complete weekday by hour grid
+     */
+    200: IntakeHours;
+};
+
+export type GetIntakeHoursResponse = GetIntakeHoursResponses[keyof GetIntakeHoursResponses];
+
 export type GetPatientsPerDoctorData = {
     body?: never;
     path?: never;
     query?: {
         limit?: number;
+        /**
+         * Rank by patients in this condition only
+         */
+        condition?: PatientCondition;
     };
     url: '/api/v1/analytics/patients-per-doctor';
 };
@@ -863,6 +1002,37 @@ export type GetConditionBreakdownResponses = {
 
 export type GetConditionBreakdownResponse = GetConditionBreakdownResponses[keyof GetConditionBreakdownResponses];
 
+export type GetConditionMixData = {
+    body?: never;
+    path?: never;
+    query?: {
+        by?: 'specialization' | 'hospital';
+    };
+    url: '/api/v1/analytics/condition-mix';
+};
+
+export type GetConditionMixErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+};
+
+export type GetConditionMixError = GetConditionMixErrors[keyof GetConditionMixErrors];
+
+export type GetConditionMixResponses = {
+    /**
+     * One row per specialization or hospital, most patients first
+     */
+    200: ConditionMix;
+};
+
+export type GetConditionMixResponse = GetConditionMixResponses[keyof GetConditionMixResponses];
+
 export type GetSpecializationBreakdownData = {
     body?: never;
     path?: never;
@@ -888,6 +1058,31 @@ export type GetSpecializationBreakdownResponses = {
 
 export type GetSpecializationBreakdownResponse = GetSpecializationBreakdownResponses[keyof GetSpecializationBreakdownResponses];
 
+export type GetWorkloadData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/analytics/workload';
+};
+
+export type GetWorkloadErrors = {
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+};
+
+export type GetWorkloadError = GetWorkloadErrors[keyof GetWorkloadErrors];
+
+export type GetWorkloadResponses = {
+    /**
+     * Summary statistics and a histogram of patients per doctor
+     */
+    200: Workload;
+};
+
+export type GetWorkloadResponse = GetWorkloadResponses[keyof GetWorkloadResponses];
+
 export type GetDemographicsData = {
     body?: never;
     path?: never;
@@ -912,3 +1107,43 @@ export type GetDemographicsResponses = {
 };
 
 export type GetDemographicsResponse = GetDemographicsResponses[keyof GetDemographicsResponses];
+
+export type GetDoctorAnalyticsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        /**
+         * Time zone used to group patients into months
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/doctors/{id}/analytics';
+};
+
+export type GetDoctorAnalyticsErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+    /**
+     * The resource does not exist
+     */
+    404: ErrorResponse;
+};
+
+export type GetDoctorAnalyticsError = GetDoctorAnalyticsErrors[keyof GetDoctorAnalyticsErrors];
+
+export type GetDoctorAnalyticsResponses = {
+    /**
+     * The doctor's analytics
+     */
+    200: DoctorAnalytics;
+};
+
+export type GetDoctorAnalyticsResponse = GetDoctorAnalyticsResponses[keyof GetDoctorAnalyticsResponses];

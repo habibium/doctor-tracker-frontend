@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateDoctorData, CreateDoctorErrors, CreateDoctorPatientData, CreateDoctorPatientErrors, CreateDoctorPatientResponses, CreateDoctorResponses, CreatePatientData, CreatePatientErrors, CreatePatientResponses, DeleteDoctorData, DeleteDoctorErrors, DeleteDoctorPatientData, DeleteDoctorPatientErrors, DeleteDoctorPatientResponses, DeleteDoctorResponses, DeletePatientData, DeletePatientErrors, DeletePatientResponses, GetAnalyticsSummaryData, GetAnalyticsSummaryErrors, GetAnalyticsSummaryResponses, GetConditionBreakdownData, GetConditionBreakdownErrors, GetConditionBreakdownResponses, GetDemographicsData, GetDemographicsErrors, GetDemographicsResponses, GetDoctorData, GetDoctorErrors, GetDoctorFiltersData, GetDoctorFiltersErrors, GetDoctorFiltersResponses, GetDoctorResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPatientsPerDoctorData, GetPatientsPerDoctorErrors, GetPatientsPerDoctorResponses, GetRegistrationsData, GetRegistrationsErrors, GetRegistrationsResponses, GetSpecializationBreakdownData, GetSpecializationBreakdownErrors, GetSpecializationBreakdownResponses, ListDoctorPatientsData, ListDoctorPatientsErrors, ListDoctorPatientsResponses, ListDoctorsData, ListDoctorsErrors, ListDoctorsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, UpdateDoctorData, UpdateDoctorErrors, UpdateDoctorResponses, UpdatePatientData, UpdatePatientErrors, UpdatePatientResponses } from './types.gen';
+import type { CreateDoctorData, CreateDoctorErrors, CreateDoctorPatientData, CreateDoctorPatientErrors, CreateDoctorPatientResponses, CreateDoctorResponses, CreatePatientData, CreatePatientErrors, CreatePatientResponses, DeleteDoctorData, DeleteDoctorErrors, DeleteDoctorPatientData, DeleteDoctorPatientErrors, DeleteDoctorPatientResponses, DeleteDoctorResponses, DeletePatientData, DeletePatientErrors, DeletePatientResponses, GetAnalyticsSummaryData, GetAnalyticsSummaryErrors, GetAnalyticsSummaryResponses, GetConditionBreakdownData, GetConditionBreakdownErrors, GetConditionBreakdownResponses, GetConditionMixData, GetConditionMixErrors, GetConditionMixResponses, GetDemographicsData, GetDemographicsErrors, GetDemographicsResponses, GetDoctorAnalyticsData, GetDoctorAnalyticsErrors, GetDoctorAnalyticsResponses, GetDoctorData, GetDoctorErrors, GetDoctorFiltersData, GetDoctorFiltersErrors, GetDoctorFiltersResponses, GetDoctorResponses, GetIntakeHoursData, GetIntakeHoursErrors, GetIntakeHoursResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPatientsPerDoctorData, GetPatientsPerDoctorErrors, GetPatientsPerDoctorResponses, GetRegistrationsData, GetRegistrationsErrors, GetRegistrationsResponses, GetSpecializationBreakdownData, GetSpecializationBreakdownErrors, GetSpecializationBreakdownResponses, GetWorkloadData, GetWorkloadErrors, GetWorkloadResponses, ListDoctorPatientsData, ListDoctorPatientsErrors, ListDoctorPatientsResponses, ListDoctorsData, ListDoctorsErrors, ListDoctorsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, UpdateDoctorData, UpdateDoctorErrors, UpdateDoctorResponses, UpdatePatientData, UpdatePatientErrors, UpdatePatientResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -247,6 +247,19 @@ export const getRegistrations = <ThrowOnError extends boolean = false>(options?:
 });
 
 /**
+ * Patient registrations by weekday and hour
+ */
+export const getIntakeHours = <ThrowOnError extends boolean = false>(options?: Options<GetIntakeHoursData, ThrowOnError>): RequestResult<GetIntakeHoursResponses, GetIntakeHoursErrors, ThrowOnError> => (options?.client ?? client).get<GetIntakeHoursResponses, GetIntakeHoursErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/analytics/intake-hours',
+    ...options
+});
+
+/**
  * Doctors with the most patients
  */
 export const getPatientsPerDoctor = <ThrowOnError extends boolean = false>(options?: Options<GetPatientsPerDoctorData, ThrowOnError>): RequestResult<GetPatientsPerDoctorResponses, GetPatientsPerDoctorErrors, ThrowOnError> => (options?.client ?? client).get<GetPatientsPerDoctorResponses, GetPatientsPerDoctorErrors, ThrowOnError>({
@@ -273,6 +286,19 @@ export const getConditionBreakdown = <ThrowOnError extends boolean = false>(opti
 });
 
 /**
+ * Patients in each condition per specialization or hospital
+ */
+export const getConditionMix = <ThrowOnError extends boolean = false>(options?: Options<GetConditionMixData, ThrowOnError>): RequestResult<GetConditionMixResponses, GetConditionMixErrors, ThrowOnError> => (options?.client ?? client).get<GetConditionMixResponses, GetConditionMixErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/analytics/condition-mix',
+    ...options
+});
+
+/**
  * Doctors and patients by specialization
  */
 export const getSpecializationBreakdown = <ThrowOnError extends boolean = false>(options?: Options<GetSpecializationBreakdownData, ThrowOnError>): RequestResult<GetSpecializationBreakdownResponses, GetSpecializationBreakdownErrors, ThrowOnError> => (options?.client ?? client).get<GetSpecializationBreakdownResponses, GetSpecializationBreakdownErrors, ThrowOnError>({
@@ -286,6 +312,19 @@ export const getSpecializationBreakdown = <ThrowOnError extends boolean = false>
 });
 
 /**
+ * How patients are spread across doctors
+ */
+export const getWorkload = <ThrowOnError extends boolean = false>(options?: Options<GetWorkloadData, ThrowOnError>): RequestResult<GetWorkloadResponses, GetWorkloadErrors, ThrowOnError> => (options?.client ?? client).get<GetWorkloadResponses, GetWorkloadErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/analytics/workload',
+    ...options
+});
+
+/**
  * Patients by gender and age group
  */
 export const getDemographics = <ThrowOnError extends boolean = false>(options?: Options<GetDemographicsData, ThrowOnError>): RequestResult<GetDemographicsResponses, GetDemographicsErrors, ThrowOnError> => (options?.client ?? client).get<GetDemographicsResponses, GetDemographicsErrors, ThrowOnError>({
@@ -295,5 +334,18 @@ export const getDemographics = <ThrowOnError extends boolean = false>(options?: 
             type: 'apiKey'
         }],
     url: '/api/v1/analytics/demographics',
+    ...options
+});
+
+/**
+ * Condition, intake and demographic breakdown for one doctor
+ */
+export const getDoctorAnalytics = <ThrowOnError extends boolean = false>(options: Options<GetDoctorAnalyticsData, ThrowOnError>): RequestResult<GetDoctorAnalyticsResponses, GetDoctorAnalyticsErrors, ThrowOnError> => (options.client ?? client).get<GetDoctorAnalyticsResponses, GetDoctorAnalyticsErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/doctors/{id}/analytics',
     ...options
 });
