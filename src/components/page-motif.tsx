@@ -213,7 +213,7 @@ function WardMotif() {
 
 /* Doctor profile: the logo's cross as a badge, split on the diagonal like the mark. */
 const BADGE_X = W - 124;
-const BADGE_Y = 14;
+const BADGE_Y = 28;
 const BADGE_RINGS = [64, 112, 160, 208].map((size, index) =>
   crossPath(BADGE_X, BADGE_Y, size, size * 0.2, size * 0.16, size * 0.07 + index),
 );
