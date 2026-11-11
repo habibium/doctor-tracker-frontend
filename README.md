@@ -1,6 +1,15 @@
 # Doctor Tracker
 
-Doctor Tracker is an admin portal for clinics that need to see, at a glance, who their doctors are and how the patients in their care are doing. Signed-in staff can search and filter hundreds of doctors and tens of thousands of patients in a few keystrokes, add and update records, and read a dashboard that puts patient condition first: one bar shows how many patients are stable, recovering, under observation or critical. This repository is the Next.js frontend. It talks to a separate Express and MongoDB API, in the `doctor-tracker-backend` repository, through a client generated from that API's OpenAPI document.
+Doctor Tracker is an admin portal for clinics that need to see, at a glance, who their doctors are and how the patients in their care are doing. Signed-in staff can search, filter and sort hundreds of doctors and tens of thousands of patients in a few keystrokes, add and update records, and read a dashboard that answers the questions an operations lead asks: how are our patients doing, is the load spread evenly, where are the critical cases, and when do people arrive. This repository is the Next.js frontend. It talks to a separate Express and MongoDB API, in the `doctor-tracker-backend` repository, through a client generated from that API's OpenAPI document.
+
+| Area | What is there |
+| --- | --- |
+| Sign-in and access | Email and password against the API's sessions. Every page behind sign-in is protected. Admins can change records; viewers can only read, and the add, edit and delete controls are not rendered for them. |
+| Doctors | Add, edit and delete. Search by name, hospital, phone or email. Filter by specialization, hospital and date added. Sort by name, specialization, hospital, patient count or date added. Each row shows the doctor's patient count beside its split by condition. |
+| A doctor's page | Contact details, three charts about that doctor's patients, and their patient list with its own search, filters and sorting. Add a patient under the doctor, edit one, or delete one from the list. |
+| Patients | Every patient, with search by name, diagnosis or phone, filters for condition, gender, doctor and registration date, sorting (including by severity), paging, edit and delete. |
+| Dashboard | Totals, patients per doctor, the condition breakdown, how evenly the load is spread, where the critical patients are, registrations over time and by weekday and hour, age and gender. |
+| Everywhere | A command palette on `⌘K` / `Ctrl K`, light and dark themes, and layouts for phone, tablet and desktop. |
 
 ## Stack
 
@@ -11,7 +20,7 @@ Doctor Tracker is an admin portal for clinics that need to see, at a glance, who
 - **URL state:** nuqs
 - **Forms:** React Hook Form and Zod 4
 - **Client state:** Zustand, for interface preferences only
-- **Charts:** Recharts, plus plain CSS bars
+- **Charts:** Recharts for the two charts that need axes, plain HTML and CSS for the rest
 - **Auth:** better-auth client, against sessions issued by the API
 
 ## Setup guide
@@ -82,10 +91,10 @@ flowchart LR
 How a page loads:
 
 1. **Guard.** `proxy.ts` checks for a session cookie and redirects signed-out visitors to `/login` before anything renders.
-2. **Static shell.** The sidebar, header and page title are prerendered at build time, so they appear immediately.
+2. **Static shell.** The sidebar, the page title and its artwork, and the loading skeletons are prerendered at build time, so they appear immediately.
 3. **Server fetch.** Inside a Suspense boundary, a server component verifies the session against the API, reads the filters from the URL, and fetches the first page of data with the visitor's cookie.
 4. **Hydration.** That data is sent in the HTML and placed in the TanStack Query cache, so the table is already rendered when JavaScript loads and the browser does not fetch it again.
-5. **Interaction.** From then on, search, filters and paging change the URL, and TanStack Query fetches through `/api/*`, which Next.js rewrites to the API.
+5. **Interaction.** From then on, search, filters, sorting and paging change the URL, and TanStack Query fetches through `/api/*`, which Next.js rewrites to the API.
 
 The browser never calls the API's own domain. Because every request goes through the Next.js origin, the session cookie is first-party and httpOnly, there is no CORS setup, and no token is ever readable from JavaScript.
 
@@ -95,7 +104,7 @@ Access is enforced in three places: the proxy (is there a cookie?), the server c
 src/
   app/
     (auth)/login/          Sign-in page
-    (app)/                 Signed-in area: layout with sidebar and header
+    (app)/                 Signed-in area: sidebar, page panel, command palette
       dashboard/           Analytics
       doctors/             List, and [id] for a doctor's profile and patients
       patients/            List
@@ -103,16 +112,20 @@ src/
   features/
     auth/ doctors/ patients/ dashboard/
                            Each holds its queries, URL params, form schema and components
+    search/                Command palette: frame, lazily loaded body, search hook
   components/
     ui/                    shadcn/ui components
-    data-table/            Shared table, pagination, search, filters, date range
-    app-shell/             Sidebar, header, user menu
+    data-table/            Shared table: sorting, pinning, row menus, pagination, filters
+    charts/                Shared tooltip, keyboard navigation and table view for charts
+    app-shell/             Sidebar, mobile top bar, user menu
+    brand.tsx              Logo and two-colour wordmark
+    page-motif.tsx         The artwork behind each page title
   lib/
     api/                   Generated client, runtime config, ApiError
     session.ts             Server-only: current user and cookie forwarding
     query-client.ts        Query defaults, retry rules, sign-out on 401
-    list-params.ts         URL state shared by every list
-  stores/preferences.ts    Theme and table row spacing
+    list-params.ts         URL state shared by every list, including sort keys
+  stores/preferences.ts    Theme, table row spacing and pinned columns
 ```
 
 ## Technical decisions
@@ -124,10 +137,10 @@ The usual answer to "where does state live" is a single store such as Redux. In 
 | State | Lives in | Why |
 | --- | --- | --- |
 | Doctors, patients, analytics | TanStack Query | It is the server's data. Query handles caching, deduplication, retries, background refresh and invalidation, which a hand-written store would have to reimplement. |
-| Search, filters, sort, page | The URL, through nuqs | A filtered list can be bookmarked, shared and reloaded, and the back button works. The server can also read it, which is what makes the first page server-rendered. |
-| Theme and table row spacing | Zustand, persisted to `localStorage` | The only true global client state: two preferences that many components read. |
+| Search, filters, sort, page, dashboard period | The URL, through nuqs | A filtered, sorted list can be bookmarked, shared and reloaded, and the back button works. The server can also read it, which is what makes the first page server-rendered. |
+| Theme, table row spacing, pinned columns | Zustand, persisted to `localStorage` | The only true global client state: preferences about how the interface looks, which belong to the person and not to a link. |
 
-Zustand over Redux for that last row because the store is under forty lines with no reducers or provider, and a component subscribes to just the field it uses. Redux's strengths, such as middleware, time-travel debugging and strict update patterns, pay off when a large amount of client-owned state changes in complex ways. Here almost nothing is client-owned.
+Zustand over Redux for that last row because the store is under fifty lines with no reducers or provider, and a component subscribes to just the field it uses. Redux's strengths, such as middleware, time-travel debugging and strict update patterns, pay off when a large amount of client-owned state changes in complex ways. Here almost nothing is client-owned.
 
 What this buys in practice:
 
@@ -144,47 +157,92 @@ An authenticated dashboard is commonly built as a client-only app: ship an empty
 
 This app uses Next.js 16's Cache Components to split each page in two:
 
-- **The shell is static.** Sidebar, header, page title and loading skeletons contain nothing user-specific, so they are prerendered at build time and served instantly.
+- **The shell is static.** Sidebar, page title, artwork and loading skeletons contain nothing user-specific, so they are prerendered at build time and served instantly.
 - **The data streams in.** Each page wraps its data in a Suspense boundary. Inside it, a server component reads the URL and the session, fetches the first page from the API with the visitor's cookie, and passes it to TanStack Query through a hydration boundary. The finished table arrives in the same response as real HTML.
 
 After that the browser owns the data, so filtering and paging are client-side fetches with no full page render.
 
-Two details made this work correctly:
+Three details made this work correctly:
 
 - **Session reads are kept out of the layout.** An early version looked up the user at the top of the signed-in layout. That made the entire shell wait for the session, left the prerendered page empty, and produced a server warning on every request. The user menu and the admin-only buttons now each sit in their own small boundary, and the shell is static again. The production build lists every signed-in route as partially prerendered.
-- **Time-zone-dependent requests stay in the browser.** A date filter means "the visitor's days", and the dashboard's daily chart groups by the visitor's time zone, which the server cannot know. Those two requests are skipped on the server and fetched after load, rather than being fetched twice with different parameters.
+- **Time-zone-dependent requests stay in the browser.** A date filter means "the visitor's days", and the dashboard's daily chart and arrival heatmap group by the visitor's time zone, which the server cannot know. Those requests are skipped on the server and fetched after load, rather than being fetched twice with different parameters. On the dashboard they also wait until their section is within a screen of the viewport, so on a laptop screen the dashboard opens without a single API call from the browser, and the last two arrive as someone scrolls towards them.
+- **Nothing shifts when the data lands.** The page panel reserves its scrollbar gutter, and skeletons are sized to the finished content, so a list that grows past the fold does not push the layout sideways.
 
 The trade-off is more moving parts than a client-only app: query keys must match exactly between server and browser, so both build their request through the same function (`toDoctorQuery`, `toPatientQuery`).
 
-### Smaller choices
+### Other decisions
+
+**Tables**
+
+- **Sorting is the API's job.** With 30,000 patients the browser only ever holds one page, so it cannot sort. Each sortable column maps to a sort key the API accepts, and each key is the order of a MongoDB index (the backend README lists them). Condition sorts by severity, not alphabetically, so "critical first" is one click.
+- **Columns can be pinned.** Any column can be pinned to the left or right from its header menu and stays in place while the rest scroll under it. The name and the actions are pinned by default, and the choice is remembered per table. An edge shadow appears only while something is scrolled underneath.
+- **The row's edge is the patient's condition.** A coloured strip runs down the leading edge of every patient row and stays put during sideways scroll, so a column of red is visible before any text is read. The Condition column still names it in words.
+- **One menu, three ways in.** A row's actions are defined once and rendered by both the three-dot button and a right-click menu, so the two cannot drift apart. Links, form fields and selected text keep the browser's own menu. `Shift F10` and long-press open it as well.
+- **Cards below 768 px.** A seven-column table on a phone is a scrolling exercise, so each row becomes a card there and a dropdown takes over sorting.
+
+**Command palette**
+
+- **It costs nothing until it is used.** The shortcut, the dialog frame and the sidebar trigger are in every page's bundle. The body, with the search and the commands, is a separate chunk that downloads on first open, or as soon as the pointer reaches the Search button. Anything typed before it arrives is kept.
+- **A keystroke is two index scans.** Doctors and patients are searched in parallel through the same indexed prefix search the lists use, five results each, after a 200 ms pause. A newer search cancels the one in flight.
+- **Narrowing a search often needs no request.** If an earlier, broader search returned every match it had, typing more letters filters those rows in the browser. The palette splits words exactly as the API does, so the answer is the same one the server would give.
+- **It knows where it is and who is asking.** On a doctor's page it offers "Add a patient to" that doctor. Viewers are not offered any action that creates a record.
+
+**Charts**
+
+- **Each one answers a question, and says the answer.** The description under a chart's title is a sentence computed from the data, for example "Half of the 300 doctors have 63 patients or fewer, while the busiest tenth have 270 or more each." The chart is the evidence, not a puzzle.
+- **The form follows the question.** A distribution is a histogram with the median and 90th percentile marked. Parts of a whole are one segmented bar. A ranking is a sorted bar list. Two dimensions of time, weekday and hour, are a heatmap. There are no pie charts, because comparing angles is harder than comparing lengths.
+- **Colour means condition, and nothing else.** Green, violet, amber and red are reserved for the four patient conditions wherever they appear: badges, row edges, bars, form controls. Every other mark is one blue. The four colours were checked for separation under the common forms of colour blindness and for contrast in both themes, and no chart relies on colour alone.
+- **Comparable by design.** In the condition mix, critical is always the last segment, so the red ends line up down the rows, and a hairline on each bar marks the clinic-wide critical share to compare against.
+- **Usable without a pointer.** Marks have keyboard focus and tooltips, the heatmap and histograms move with the arrow keys from a single tab stop, and the condition mix and heatmap can each be opened as a plain table.
+- **Local conventions.** The heatmap's week starts on Sunday, as the working week does in Bangladesh, and hours are in the visitor's time zone.
+
+**Look and layout**
+
+- **The theme comes from the logo.** Its blue and mint are the two brand colours, each with a light-theme and a dark-theme shade chosen for contrast, and the wordmark is set in the same two colours.
+- **An inset shell.** The sidebar sits on a tinted plane and the page is one rounded panel beside it, with no top bar on desktop. Search, theme and the collapse control live in the sidebar.
+- **Each page has its own header artwork**, drawn in SVG from the logo's cross: a heartbeat trace on the dashboard, a field of crosses for doctors, a ward board for patients. It is part of the prerendered shell and downloads nothing.
+- **On phones** the sidebar becomes a drawer, and a top bar holds the menu button, the logo and the page's main action, so "Add patient" is always one tap away.
+
+**Smaller choices**
 
 - **Generated API client.** Request and response types come from the API's OpenAPI document, so the two repositories cannot drift apart silently. Form schemas are hand-written for friendly messages but checked against the generated types with `satisfies`.
-- **Colour means condition.** The interface is deliberately neutral, and colour is reserved for patient condition wherever it appears: badges, the dashboard bar, form controls. The four colours were checked for colour-blind separation, and every use pairs the colour with a text label. All other chart marks share one neutral ink.
 - **API errors land on fields.** A validation error from the API is shown under the input it refers to, and a duplicate email is reported on the email field.
-- **Responsive tables.** Tables become stacked cards on small screens instead of scrolling sideways, and the sidebar becomes a drawer.
+- **Missing records and failed loads have their own screens**, each with a way back, so a stale link never ends in a blank page.
 
 ## Visual evidence
 
 ### Desktop
 
-| Dashboard | Dashboard, charts |
+| Dashboard | Workload |
 | --- | --- |
-| ![Dashboard with patients by condition](docs/screenshots/desktop-dashboard.png) | ![Registrations chart and busiest doctors](docs/screenshots/desktop-dashboard-charts.png) |
+| ![Patients in care, split by condition, with totals](docs/screenshots/desktop-dashboard.png) | ![Histogram of patients per doctor beside the busiest doctors](docs/screenshots/desktop-dashboard-workload.png) |
 
-| Doctors | Doctor profile |
+| Arrivals | Critical patients, dark theme |
 | --- | --- |
-| ![Doctors list with search and filters](docs/screenshots/desktop-doctors.png) | ![A doctor's profile and patients](docs/screenshots/desktop-doctor-profile.png) |
+| ![Daily registrations and a weekday by hour heatmap](docs/screenshots/desktop-dashboard-arrivals.png) | ![Condition mix by specialization in the dark theme](docs/screenshots/desktop-dashboard-dark.png) |
 
-| Patients, filtered to critical | Dark theme |
+| Doctors, sorted by patients | Doctor profile |
 | --- | --- |
-| ![Patients list filtered by condition](docs/screenshots/desktop-patients.png) | ![Dashboard in the dark theme](docs/screenshots/desktop-dashboard-dark.png) |
+| ![Doctors list with patient counts and condition bars](docs/screenshots/desktop-doctors.png) | ![A doctor's charts and patient list](docs/screenshots/desktop-doctor-profile.png) |
 
-| Sign in |
-| --- |
-| ![Sign-in page with demo accounts](docs/screenshots/desktop-login.png) |
+| Patients, critical first | Sorting and pinning |
+| --- | --- |
+| ![Patients list sorted by severity with coloured row edges](docs/screenshots/desktop-patients.png) | ![Column menu with sort and pin options over a table scrolled sideways](docs/screenshots/desktop-patients-pinned.png) |
+
+| Right-click menu | Command palette |
+| --- | --- |
+| ![A row's actions opened by right click](docs/screenshots/desktop-patients-context-menu.png) | ![Searching doctors and patients from the command palette](docs/screenshots/desktop-command-palette.png) |
+
+| Patients, dark theme | Sign in |
+| --- | --- |
+| ![Critical patients sorted by age in the dark theme](docs/screenshots/desktop-patients-dark.png) | ![Sign-in page with demo accounts](docs/screenshots/desktop-login.png) |
 
 ### Mobile
 
-| Dashboard | Doctors | Patients | Navigation |
+| Dashboard | Condition mix | Arrival heatmap | Navigation |
 | --- | --- | --- | --- |
-| ![Dashboard on a phone](docs/screenshots/mobile-dashboard.png) | ![Doctors as cards on a phone](docs/screenshots/mobile-doctors.png) | ![Patients as cards on a phone](docs/screenshots/mobile-patients.png) | ![Navigation drawer on a phone](docs/screenshots/mobile-navigation.png) |
+| ![Dashboard on a phone](docs/screenshots/mobile-dashboard.png) | ![Condition mix on a phone](docs/screenshots/mobile-condition-mix.png) | ![Heatmap turned on its side for a phone](docs/screenshots/mobile-heatmap.png) | ![Navigation drawer on a phone](docs/screenshots/mobile-navigation.png) |
+
+| Doctors | Patients | Doctor profile |
+| --- | --- | --- |
+| ![Doctors as cards on a phone](docs/screenshots/mobile-doctors.png) | ![Patients as cards on a phone](docs/screenshots/mobile-patients.png) | ![A doctor's profile on a phone](docs/screenshots/mobile-doctor-profile.png) |
