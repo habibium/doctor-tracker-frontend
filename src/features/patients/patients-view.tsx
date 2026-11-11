@@ -22,6 +22,7 @@ import type { RowActionGroups } from "@/components/data-table/row-actions";
 import { SearchInput } from "@/components/data-table/search-input";
 import { SortSelect } from "@/components/data-table/sort-select";
 import { LocalDate } from "@/components/local-date";
+import { analyticsQueries } from "@/features/dashboard/queries";
 import { DoctorCombobox } from "@/features/doctors/doctor-combobox";
 import { doctorQueries } from "@/features/doctors/queries";
 import { SpecializationIcon } from "@/features/doctors/specialization";
@@ -167,6 +168,31 @@ function DoctorFilter({
   );
 }
 
+/** Lives inside the sheet, so the list of diagnoses is only fetched once someone opens it. */
+function DiagnosisFilter({
+  diagnosis,
+  onChange,
+}: {
+  diagnosis: string | null;
+  onChange: (diagnosis: string | null) => void;
+}) {
+  const { data } = useQuery(analyticsQueries.diagnoses());
+  const options = (data ?? [])
+    .map((row) => ({ value: row.diagnosis, label: row.diagnosis }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  return (
+    <FilterSelect
+      className="w-full"
+      label="Diagnosis"
+      allLabel="All diagnoses"
+      value={diagnosis}
+      options={options}
+      onChange={onChange}
+    />
+  );
+}
+
 /** The request behind the list, shared by the toolbar's count and the table. */
 function usePatientList(doctorId?: string) {
   const [params, setParams] = useQueryStates(patientParams);
@@ -275,6 +301,12 @@ function PatientsToolbar({ doctorId }: { doctorId?: string }) {
               value={params.condition}
               options={CONDITIONS}
               onChange={(condition) => setParams({ condition, page: null })}
+            />
+          </FilterField>
+          <FilterField label="Diagnosis">
+            <DiagnosisFilter
+              diagnosis={params.diagnosis}
+              onChange={(diagnosis) => setParams({ diagnosis, page: null })}
             />
           </FilterField>
           <FilterField label="Gender">
