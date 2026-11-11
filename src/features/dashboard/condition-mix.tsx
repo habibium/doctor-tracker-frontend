@@ -6,6 +6,7 @@ import { formatShare } from "@/components/charts/chart-format";
 import { TableView, TD, TH } from "@/components/charts/table-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { SpecializationIcon } from "@/features/doctors/specialization";
 import { ConditionBar } from "@/features/patients/condition-bar";
 import { CONDITIONS } from "@/features/patients/conditions";
 import type { ConditionMix } from "@/lib/api";
@@ -100,7 +101,15 @@ function MixControls({
 
 const ROW = "grid grid-cols-[minmax(0,1fr)_auto_3.5rem] items-center gap-x-4 sm:grid-cols-[minmax(0,12rem)_4rem_minmax(0,1fr)_3.5rem]";
 
-function MixList({ rows, overall, groupLabel }: { rows: Row[]; overall: number; groupLabel: string }) {
+function MixList({
+  rows,
+  overall,
+  group,
+}: {
+  rows: Row[];
+  overall: number;
+  group: (typeof MIX_GROUPS)[number];
+}) {
   return (
     <div className="flex flex-col gap-3">
       <ul aria-hidden="true" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -117,7 +126,7 @@ function MixList({ rows, overall, groupLabel }: { rows: Row[]; overall: number; 
       </ul>
 
       <div className={cn(ROW, "border-b pb-2 text-xs text-muted-foreground")} aria-hidden="true">
-        <span>{groupLabel}</span>
+        <span>{group.label}</span>
         <span className="text-right">Patients</span>
         <span className="hidden sm:block">Split by condition</span>
         <span className="text-right">Critical</span>
@@ -126,14 +135,19 @@ function MixList({ rows, overall, groupLabel }: { rows: Row[]; overall: number; 
       <ul className="flex flex-col gap-y-3">
         {rows.map((row) => (
           <li key={row.key} className={cn(ROW, "gap-y-2 text-sm")}>
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate font-medium" title={row.key}>
-                {row.key}
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                {formatNumber(row.doctors)} {row.doctors === 1 ? "doctor" : "doctors"}
-                {row.doctors > 0 && `, ${formatNumber(Math.round(row.patients / row.doctors))} patients each`}
-              </span>
+            <div className="flex min-w-0 items-start gap-2">
+              {group.value === "specialization" && (
+                <SpecializationIcon name={row.key} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              )}
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate font-medium" title={row.key}>
+                  {row.key}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {formatNumber(row.doctors)} {row.doctors === 1 ? "doctor" : "doctors"}
+                  {row.doctors > 0 && `, ${formatNumber(Math.round(row.patients / row.doctors))} patients each`}
+                </span>
+              </div>
             </div>
             <span className="tabular text-right">
               {formatNumber(row.patients)}
@@ -164,11 +178,11 @@ function MixList({ rows, overall, groupLabel }: { rows: Row[]; overall: number; 
 
       <TableView>
         <table className="w-full">
-          <caption className="sr-only">Patients by condition for each {groupLabel.toLowerCase()}</caption>
+          <caption className="sr-only">Patients by condition for each {group.label.toLowerCase()}</caption>
           <thead>
             <tr>
               <th scope="col" className={TH}>
-                {groupLabel}
+                {group.label}
               </th>
               <th scope="col" className={cn(TH, "text-right")}>
                 Patients
@@ -235,7 +249,7 @@ export function ConditionMixPanel({ className }: { className?: string }) {
       className={className}
     >
       <QueryContent query={query} fallback={<Skeleton className="h-[48rem] w-full rounded-xl" />}>
-        {() => <MixList rows={rows ?? []} overall={data?.overall ?? 0} groupLabel={group.label} />}
+        {() => <MixList rows={rows ?? []} overall={data?.overall ?? 0} group={group} />}
       </QueryContent>
     </Panel>
   );

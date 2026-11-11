@@ -6,7 +6,6 @@ import { ArrowLeftIcon, HospitalIcon, MailIcon, PhoneIcon } from "lucide-react";
 import { LoadError } from "@/components/data-table/list-states";
 import { LocalDate } from "@/components/local-date";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCanEdit } from "@/components/user-provider";
@@ -16,6 +15,7 @@ import { formatNumber, initials } from "@/lib/format";
 import { DoctorProfileActions } from "./doctor-actions";
 import { DoctorAnalyticsBoard } from "./doctor-analytics";
 import { doctorQueries } from "./queries";
+import { SpecializationBadge } from "./specialization";
 
 export function DoctorProfile({ id }: { id: string }) {
   const { data: doctor, error, isPending, refetch } = useQuery(doctorQueries.detail(id));
@@ -46,7 +46,7 @@ export function DoctorProfile({ id }: { id: string }) {
             <div className="flex min-w-0 flex-col gap-1.5">
               <h1 className="truncate text-2xl font-semibold tracking-tight">{doctor.name}</h1>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                <Badge variant="secondary">{doctor.specialization}</Badge>
+                <SpecializationBadge name={doctor.specialization} />
                 <span>
                   On the roster since <LocalDate value={doctor.createdAt} />
                 </span>

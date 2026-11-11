@@ -34,6 +34,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { doctorQueries } from "@/features/doctors/queries";
+import { SpecializationIcon } from "@/features/doctors/specialization";
 import { ConditionBadge } from "@/features/patients/conditions";
 import type { Doctor, Patient } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
@@ -296,6 +297,7 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (request: FormRequest)
                   </span>
                 }
               >
+                <SpecializationIcon name={doctor.specialization} className="size-3.5" />
                 <span className="truncate">
                   <Highlight text={doctor.specialization} terms={terms} />
                   {" · "}
