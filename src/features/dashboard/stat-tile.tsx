@@ -31,12 +31,7 @@ export function Delta({ current, previous, period }: { current: number; previous
 
   return (
     <>
-      <span
-        className={cn(
-          "inline-flex items-center gap-0.5 font-medium",
-          change >= 0 ? "text-positive" : "text-destructive",
-        )}
-      >
+      <span className="inline-flex items-center gap-0.5 font-medium text-foreground">
         <Icon className="size-3.5" aria-hidden="true" />
         {formatPercent(Math.abs(change))}
         <span className="sr-only">{change >= 0 ? "more" : "fewer"}</span>
