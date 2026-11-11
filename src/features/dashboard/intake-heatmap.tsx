@@ -17,12 +17,20 @@ const MIX = [6, 24, 42, 60, 78, 96];
 const levelColor = (level: number) =>
   `color-mix(in oklab, var(--data) ${MIX[level]}%, var(--card))`;
 
-/** Lower bounds of the five classes above zero, on round numbers that reach `max`. */
+/**
+ * Lower bounds of the five classes above zero, on round numbers. The class width is the
+ * first round step past a fifth of the busiest hour, so the top class is never left empty.
+ */
 function classBounds(max: number) {
-  const rough = Math.max(1, max / LEVELS);
+  const rough = max / LEVELS;
+  if (rough <= 1) return [1, 2, 3, 4, 5];
   const magnitude = 10 ** Math.floor(Math.log10(rough));
-  const width = ([1, 2, 5, 10].find((factor) => factor * magnitude >= rough) ?? 10) * magnitude;
-  return Array.from({ length: LEVELS }, (_, index) => (width === 1 ? index + 1 : Math.max(1, index * width)));
+  const steps = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]
+    .map((factor) => factor * magnitude)
+    .filter(Number.isInteger);
+  const up = steps.find((step) => step >= rough)!;
+  const width = up * (LEVELS - 1) <= max ? up : (steps.findLast((step) => step < rough) ?? up);
+  return width === 1 ? [1, 2, 3, 4, 5] : [1, width, 2 * width, 3 * width, 4 * width];
 }
 
 interface Cell {

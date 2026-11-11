@@ -37,7 +37,7 @@ export function BarList({ items, unit, compact = false, fill = "bg-data" }: BarL
             "grid items-center gap-3 text-sm",
             compact
               ? "grid-cols-[4.5rem_minmax(0,1fr)_3.25rem]"
-              : "grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_3.25rem] sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_3.25rem]",
+              : "grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_3.25rem] sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)_3.25rem] xl:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_3.25rem]",
           )}
         >
           <div className="flex min-w-0 flex-col">

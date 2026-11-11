@@ -1,5 +1,6 @@
 "use client";
 
+import { formatShare } from "@/components/charts/chart-format";
 import { ChartMark, ChartTip, TipRow, TipTitle, useChartTip } from "@/components/charts/chart-tip";
 import type { ConditionCounts } from "@/lib/api";
 import { formatNumber, formatPercent } from "@/lib/format";
@@ -24,7 +25,7 @@ export function conditionParts(counts: ConditionCounts) {
 export function describeConditions(counts: ConditionCounts) {
   const { parts } = conditionParts(counts);
   return parts
-    .map((part) => `${part.label} ${formatNumber(part.patients)} (${formatPercent(part.share)})`)
+    .map((part) => `${part.label} ${formatNumber(part.patients)} (${formatShare(part.share)})`)
     .join(", ");
 }
 
@@ -38,7 +39,7 @@ function ConditionTipRows({ counts, title }: { counts: ConditionCounts; title: s
           key={part.value}
           swatch={part.fill}
           value={formatNumber(part.patients)}
-          label={`${part.label}, ${formatPercent(part.share)}`}
+          label={`${part.label}, ${formatShare(part.share)}`}
         />
       ))}
     </>
@@ -124,7 +125,7 @@ export function ConditionBarTall({ counts, label }: { counts: ConditionCounts; l
               render={
                 <div
                   tabIndex={0}
-                  aria-label={`${part.label}: ${formatNumber(part.patients)} patients, ${formatPercent(part.share)}`}
+                  aria-label={`${part.label}: ${formatNumber(part.patients)} patients, ${formatShare(part.share)}`}
                   style={{ flexGrow: part.patients }}
                   className={cn(
                     "@container flex min-w-1 basis-0 cursor-default items-center rounded px-2 text-xs font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
@@ -145,7 +146,7 @@ export function ConditionBarTall({ counts, label }: { counts: ConditionCounts; l
           <TipRow
             swatch={part.fill}
             value={formatNumber(part.patients)}
-            label={`${part.label}, ${formatPercent(part.share)}`}
+            label={`${part.label}, ${formatShare(part.share)}`}
           />
         )}
       </ChartTip>
