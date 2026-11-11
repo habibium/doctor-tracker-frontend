@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/app-shell/site-header";
 import { UserMenuSkeleton } from "@/components/app-shell/user-menu";
 import { CurrentUserMenu } from "@/components/current-user";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { CommandPalette } from "@/features/search/command-palette";
 
 /**
  * The sidebar and header contain nothing request-specific, so they are prerendered
@@ -25,6 +26,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </SidebarInset>
+      <CommandPalette />
     </SidebarProvider>
   );
 }

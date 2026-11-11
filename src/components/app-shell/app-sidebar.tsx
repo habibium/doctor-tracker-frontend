@@ -17,6 +17,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { SearchTrigger } from "@/features/search/command-palette";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
@@ -68,6 +69,15 @@ export function AppSidebar({ footer }: { footer: ReactNode }) {
       </SidebarHeader>
 
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SearchTrigger />
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupContent>
             {/* The path is unknown while the shell prerenders, so links start unhighlighted. */}
