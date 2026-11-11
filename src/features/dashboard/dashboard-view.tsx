@@ -103,8 +103,12 @@ function Workload() {
   );
 }
 
+const sumPatients = (rows: { patients: number }[]) => rows.reduce((sum, row) => sum + row.patients, 0);
+
 function Critical() {
   const criticalDoctors = useQuery(analyticsQueries.criticalDoctors());
+  const conditions = useQuery(analyticsQueries.conditions());
+  const allCritical = conditions.data?.find((row) => row.condition === "critical")?.patients ?? 0;
 
   return (
     <Section
@@ -125,17 +129,26 @@ function Critical() {
               doctors.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No patient is in critical condition.</p>
               ) : (
-                <BarList
-                  unit="critical patients"
-                  fill="bg-condition-critical"
-                  items={doctors.map((doctor) => ({
-                    key: doctor.doctorId,
-                    label: doctor.name,
-                    detail: `${doctor.specialization}, ${doctor.hospital}`,
-                    value: doctor.patients,
-                    href: `/doctors/${doctor.doctorId}`,
-                  }))}
-                />
+                <div className="flex flex-col gap-4">
+                  <BarList
+                    unit="critical patients"
+                    fill="bg-condition-critical"
+                    items={doctors.map((doctor) => ({
+                      key: doctor.doctorId,
+                      label: doctor.name,
+                      detail: `${doctor.specialization}, ${doctor.hospital}`,
+                      value: doctor.patients,
+                      href: `/doctors/${doctor.doctorId}`,
+                    }))}
+                  />
+                  {allCritical > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Together these {doctors.length} doctors look after{" "}
+                      {formatNumber(sumPatients(doctors))} of the {formatNumber(allCritical)} critical
+                      patients, {formatShare(sumPatients(doctors) / allCritical)}.
+                    </p>
+                  )}
+                </div>
               )
             }
           </QueryContent>
