@@ -26,9 +26,14 @@ interface DateRangeFilterProps {
   onChange: (range: { from: string | null; to: string | null }) => void;
   /** What the date refers to, e.g. "Added" or "Registered". */
   label: string;
+  className?: string;
 }
 
-export function DateRangeFilter({ from, to, onChange, label }: DateRangeFilterProps) {
+/** "1 Nov 2026 to today": how an applied range is worded on the button and its chip. */
+export const dateRangeLabel = (from: string | null, to: string | null) =>
+  `${from ? formatDate(fromDateParam(from)) : "Any time"} to ${to ? formatDate(fromDateParam(to)) : "today"}`;
+
+export function DateRangeFilter({ from, to, onChange, label, className }: DateRangeFilterProps) {
   const [open, setOpen] = useState(false);
   // Holds a half-picked range until the second day is chosen.
   const [draft, setDraft] = useState<DateRange | undefined>();
@@ -70,19 +75,12 @@ export function DateRangeFilter({ from, to, onChange, label }: DateRangeFilterPr
         render={
           <Button
             variant="outline"
-            className={cn("justify-start font-normal", !isActive && "text-muted-foreground")}
+            className={cn("justify-start font-normal", !isActive && "text-muted-foreground", className)}
           />
         }
       >
         <CalendarIcon data-icon="inline-start" />
-        {isActive ? (
-          <span>
-            {from ? formatDate(fromDateParam(from)) : "Any time"} to{" "}
-            {to ? formatDate(fromDateParam(to)) : "today"}
-          </span>
-        ) : (
-          `${label} any time`
-        )}
+        {isActive ? dateRangeLabel(from, to) : `${label} any time`}
       </PopoverTrigger>
       <PopoverContent align="start" className="flex w-auto flex-col p-0 sm:flex-row">
         <div className="flex flex-row flex-wrap gap-1 p-2 sm:flex-col sm:flex-nowrap">

@@ -5,7 +5,7 @@ const WIDTHS = ["w-44", "w-28", "w-36", "w-24", "w-16", "w-20"];
 /** Mirrors the table's row rhythm so content does not jump when data arrives. */
 export function DataTableSkeleton({ rows = 10, columns = 6 }: { rows?: number; columns?: number }) {
   return (
-    <div role="status" aria-label="Loading">
+    <div role="status" aria-label="Loading" className="md:min-h-0 md:flex-1 md:overflow-hidden">
       <div className="hidden h-10 items-center gap-6 border-b px-4 md:flex">
         {WIDTHS.slice(0, columns).map((width, index) => (
           <Skeleton key={index} className={`h-3 ${width} max-w-full flex-1`} />

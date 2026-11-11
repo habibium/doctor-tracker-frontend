@@ -15,6 +15,7 @@ interface SortSelectProps<TField extends string> {
   sortable: SortableColumns<TField>;
   value: SortValue<TField>;
   onChange: (sort: SortValue<TField>) => void;
+  className?: string;
 }
 
 /** Sorting for the card view, which has no column headers to click. */
@@ -22,6 +23,7 @@ export function SortSelect<TField extends string>({
   sortable,
   value,
   onChange,
+  className,
 }: SortSelectProps<TField>) {
   const options = sortOptions(sortable);
 
@@ -31,7 +33,7 @@ export function SortSelect<TField extends string>({
       value={value}
       onValueChange={(next) => next && onChange(next)}
     >
-      <SelectTrigger size="sm" aria-label="Sort by" className="md:hidden">
+      <SelectTrigger aria-label="Sort by" className={className}>
         <ArrowDownUpIcon aria-hidden="true" className="text-muted-foreground" />
         <SelectValue />
       </SelectTrigger>

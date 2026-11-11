@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,9 +40,16 @@ interface DataTablePaginationProps {
   meta: PaginationMeta;
   onPageChange: (page: number) => void;
   onLimitChange: (limit: (typeof PAGE_SIZES)[number]) => void;
+  /** Sits between the row count and the page buttons, e.g. a colour key. */
+  children?: ReactNode;
 }
 
-export function DataTablePagination({ meta, onPageChange, onLimitChange }: DataTablePaginationProps) {
+export function DataTablePagination({
+  meta,
+  onPageChange,
+  onLimitChange,
+  children,
+}: DataTablePaginationProps) {
   const { page, limit, total, totalPages } = meta;
   const first = total === 0 ? 0 : (page - 1) * limit + 1;
   const last = Math.min(page * limit, total);
@@ -71,6 +79,8 @@ export function DataTablePagination({ meta, onPageChange, onLimitChange }: DataT
           </SelectContent>
         </Select>
       </div>
+
+      {children}
 
       <Pagination className="mx-0 w-auto">
         <PaginationContent>

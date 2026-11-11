@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type TouchEvent,
   use,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -85,9 +86,9 @@ export function actionsColumn<TData extends RowRecord>(): DataTableColumn<TData>
     id: ACTIONS,
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => <RowActionsCell row={row.original} />,
-    size: 56,
+    size: 52,
     enablePinning: false,
-    meta: { className: "px-3 text-right" },
+    meta: { className: "px-2.5 text-right" },
   };
 }
 
@@ -132,6 +133,9 @@ const rowIdOf = (target: EventTarget) =>
 const ROW_BG =
   "[--row-bg:var(--color-card)] hover:[--row-bg:var(--row-hover)] has-aria-expanded:[--row-bg:var(--row-hover)] data-menu-open:[--row-bg:var(--row-hover)] data-menu-open:bg-muted/50";
 const PINNED = "sticky z-[1] bg-(--row-bg) transition-shadow";
+// Column headers stay at the top of the scrolling area; a pinned one also holds its side.
+const STICKY_HEAD = "sticky top-0 z-[2] bg-card";
+const PINNED_HEAD = "top-0 z-[3]";
 const START_EDGE =
   "group-data-overflow-start/scroll:shadow-[inset_-1px_0_0_var(--color-border),10px_0_12px_-10px_rgb(0_0_0/0.35)]";
 const END_EDGE =
@@ -160,6 +164,8 @@ interface DataTableProps<TData extends RowRecord, TField extends string> {
   rowAccent?: (row: TData) => string;
   /** True while a newer page is loading and the previous one is still shown. */
   isStale?: boolean;
+  /** The rows scroll back to the top whenever this changes, e.g. the page number. */
+  resetScrollKey?: string | number;
 }
 
 export function DataTable<TData extends RowRecord, TField extends string>({
@@ -176,6 +182,7 @@ export function DataTable<TData extends RowRecord, TField extends string>({
   getActionsLabel,
   rowAccent,
   isStale = false,
+  resetScrollKey,
 }: DataTableProps<TData, TField>) {
   const density = usePreferences((state) => state.density);
   const columnPinning = usePreferences((state) => state.pinnedColumns[id]) ?? defaultPinning;
@@ -191,6 +198,20 @@ export function DataTable<TData extends RowRecord, TField extends string>({
       setPinnedColumns(id, actionsLast(functionalUpdate(updater, columnPinning))),
   });
   const rows = table.getRowModel().rows;
+
+  const scrollNode = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    scrollNode.current?.scrollTo({ top: 0 });
+  }, [resetScrollKey]);
+
+  function attachScroll(node: HTMLDivElement) {
+    scrollNode.current = node;
+    const stopTracking = trackOverflow(node);
+    return () => {
+      stopTracking();
+      scrollNode.current = null;
+    };
+  }
 
   const pendingRowId = useRef<string | undefined>(undefined);
   const nativeMenu = useRef(false);
@@ -215,8 +236,9 @@ export function DataTable<TData extends RowRecord, TField extends string>({
 
   function pinning(column: Column<Features, TData, unknown>) {
     const side = column.getIsPinned();
-    if (!side) return { className: undefined, style: undefined };
+    if (!side) return { pinned: false, className: undefined, style: undefined };
     return {
+      pinned: true,
       className: cn(PINNED, column.id === startEdge && START_EDGE, column.id === endEdge && END_EDGE),
       style:
         side === "start"
@@ -321,9 +343,11 @@ export function DataTable<TData extends RowRecord, TField extends string>({
 
   const grid = (
     // Inline-size containment keeps the table's minimum width from stretching the page.
+    // In a height-limited card this is also where the rows scroll; the gutter is reserved
+    // so a scrollbar appearing cannot push the last column out of view.
     <div
-      ref={trackOverflow}
-      className="group/scroll relative isolate hidden overflow-x-auto overscroll-x-contain contain-inline-size md:block"
+      ref={attachScroll}
+      className="group/scroll relative isolate hidden overflow-auto overscroll-contain contain-inline-size [scrollbar-color:color-mix(in_oklch,var(--muted-foreground)_35%,transparent)_transparent] [scrollbar-gutter:stable] [scrollbar-width:thin] md:block md:min-h-0 md:flex-1"
     >
       <table
         data-slot="table"
@@ -336,13 +360,13 @@ export function DataTable<TData extends RowRecord, TField extends string>({
               {rowAccent && (
                 <TableHead
                   aria-hidden="true"
-                  className={cn(PINNED, "start-0 h-10 border-b p-0")}
+                  className={cn(PINNED, PINNED_HEAD, "start-0 h-10 border-b p-0")}
                   style={{ width: ACCENT_WIDTH }}
                 />
               )}
               {group.headers.map((header) => {
                 const column = header.column;
-                const { className, style } = pinning(column);
+                const { pinned, className, style } = pinning(column);
                 const sortState = headerSort(column.id);
                 const pin = headerPin(column);
                 const title = typeof column.columnDef.header === "string" ? column.columnDef.header : undefined;
@@ -361,12 +385,14 @@ export function DataTable<TData extends RowRecord, TField extends string>({
                           : undefined
                     }
                     className={cn(
-                      "group/head relative h-10 border-b px-4 text-xs font-medium text-muted-foreground",
+                      "group/head h-10 border-b px-4 text-xs font-medium text-muted-foreground",
+                      STICKY_HEAD,
                       align === "end" && "text-right",
                       // Touch screens always show the menu button, so keep the label clear of it.
                       pin && (align === "end" ? "pointer-coarse:ps-9" : "pointer-coarse:pe-9"),
                       column.columnDef.meta?.className,
                       className,
+                      pinned && PINNED_HEAD,
                     )}
                     style={{ width: column.id === growId ? undefined : header.getSize(), ...style }}
                   >
@@ -431,7 +457,10 @@ export function DataTable<TData extends RowRecord, TField extends string>({
         getLabel: getActionsLabel as RowActionsContextValue["getLabel"],
       }}
     >
-      <div aria-busy={isStale} className={cn("transition-opacity", isStale && "opacity-60")}>
+      <div
+        aria-busy={isStale}
+        className={cn("transition-opacity md:flex md:min-h-0 md:flex-1 md:flex-col", isStale && "opacity-60")}
+      >
         {getRowActions ? (
           <ContextMenu
             onOpenChange={(open, details) => {
@@ -441,7 +470,7 @@ export function DataTable<TData extends RowRecord, TField extends string>({
             }}
           >
             <ContextMenuTrigger
-              className="select-auto"
+              className="select-auto md:flex md:min-h-0 md:flex-1 md:flex-col"
               onPointerDownCapture={handlePointerDownCapture}
               onContextMenuCapture={handleContextMenuCapture}
               onTouchStartCapture={handleTouchStartCapture}

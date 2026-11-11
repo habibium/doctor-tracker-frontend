@@ -51,6 +51,10 @@
   --color-condition-recovering: var(--condition-recovering);
   --color-condition-observation: var(--condition-observation);
   --color-condition-critical: var(--condition-critical);
+  --color-condition-stable-ink: var(--condition-stable-ink);
+  --color-condition-recovering-ink: var(--condition-recovering-ink);
+  --color-condition-observation-ink: var(--condition-observation-ink);
+  --color-condition-critical-ink: var(--condition-critical-ink);
   --color-on-condition: var(--on-condition);
   --color-on-condition-stable: var(--on-condition-stable);
   --color-on-condition-observation: var(--on-condition-observation);
@@ -129,6 +133,11 @@
   --on-condition: #ffffff;
   --on-condition-stable: #0b1324;
   --on-condition-observation: #0b1324;
+  /* Text on a tint of its own condition: pulled towards the foreground, so it clears 4.5:1 in both themes. */
+  --condition-stable-ink: color-mix(in oklab, var(--condition-stable) 55%, var(--foreground));
+  --condition-recovering-ink: color-mix(in oklab, var(--condition-recovering) 55%, var(--foreground));
+  --condition-observation-ink: color-mix(in oklab, var(--condition-observation) 55%, var(--foreground));
+  --condition-critical-ink: color-mix(in oklab, var(--condition-critical) 55%, var(--foreground));
   --data: oklch(0.58 0.19 256);
   --data-soft: oklch(0.93 0.03 252);
   --positive: oklch(0.52 0.12 168);

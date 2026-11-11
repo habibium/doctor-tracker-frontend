@@ -7,10 +7,16 @@ import { debounce, useQueryStates } from "nuqs";
 import { actionsColumn, createColumns, DataTable } from "@/components/data-table/data-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
-import { DateRangeFilter } from "@/components/data-table/date-range-filter";
+import { DateRangeFilter, dateRangeLabel } from "@/components/data-table/date-range-filter";
 import { DensityToggle } from "@/components/data-table/density-toggle";
 import { FilterSelect } from "@/components/data-table/filter-select";
-import { ListHeader } from "@/components/data-table/list-header";
+import {
+  ActiveFilters,
+  type FilterChip,
+  FilterField,
+  FilterSheet,
+} from "@/components/data-table/filter-sheet";
+import { ListLayout, ListToolbar } from "@/components/data-table/list-layout";
 import { LoadError, NoResults } from "@/components/data-table/list-states";
 import type { RowActionGroups } from "@/components/data-table/row-actions";
 import { SearchInput } from "@/components/data-table/search-input";
@@ -18,7 +24,6 @@ import { SortSelect } from "@/components/data-table/sort-select";
 import { LocalDate } from "@/components/local-date";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ConditionBar, ConditionCountsLine, ConditionKey } from "@/features/patients/condition-bar";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Doctor } from "@/lib/api";
@@ -70,33 +75,33 @@ const columns = [
     id: "doctor",
     header: "Doctor",
     cell: ({ row }) => <DoctorName doctor={row.original} />,
-    size: 228,
+    size: 220,
   }),
   column.accessor("specialization", {
     header: "Specialization",
     cell: ({ getValue }) => <Badge variant="secondary">{getValue()}</Badge>,
-    size: 192,
+    size: 204,
   }),
   column.accessor("hospital", {
     header: "Hospital",
     cell: ({ getValue }) => <span className="line-clamp-2 leading-tight">{getValue()}</span>,
-    size: 176,
+    size: 168,
     meta: { className: "whitespace-normal!" },
   }),
   column.accessor("phone", {
     header: "Phone",
     cell: ({ getValue }) => <span className="tabular">{getValue()}</span>,
-    size: 148,
+    size: 146,
   }),
   column.accessor("patientCount", {
     header: "Patients",
     cell: ({ row }) => <PatientLoad doctor={row.original} />,
-    size: 160,
+    size: 154,
   }),
   column.accessor("createdAt", {
     header: "Added",
     cell: ({ getValue }) => <LocalDate value={getValue()} className="text-muted-foreground" />,
-    size: 120,
+    size: 118,
   }),
   actionsColumn<Doctor>(),
 ];
@@ -135,62 +140,118 @@ function DoctorCard({ doctor, actions }: { doctor: Doctor; actions: ReactNode })
   );
 }
 
-function DoctorsToolbar() {
+/** The request behind the list, shared by the toolbar's count and the table. */
+function useDoctorList() {
   const [params, setParams] = useQueryStates(doctorParams);
-  const { data: filters } = useQuery(doctorQueries.filters());
+  // Search waits for a pause in typing; every other filter applies at once.
+  const search = useDebouncedValue(params.search);
+  return { params, setParams, search, query: toDoctorQuery({ ...params, search }) };
+}
 
-  const hasFilters = Boolean(
-    params.search || params.specialization || params.hospital || params.from || params.to,
-  );
+function DoctorsToolbar() {
+  const { params, setParams, query } = useDoctorList();
+  const { data: filters } = useQuery(doctorQueries.filters());
+  const { data: total } = useQuery({ ...doctorQueries.list(query), select: (page) => page.meta.total });
+
   const toOptions = (values: string[] = []) => values.map((value) => ({ value, label: value }));
+  const clearFilters = () =>
+    setParams({ specialization: null, hospital: null, from: null, to: null, page: null });
+
+  const chips: FilterChip[] = [];
+  if (params.specialization) {
+    chips.push({
+      key: "specialization",
+      label: "Specialization",
+      value: params.specialization,
+      onRemove: () => void setParams({ specialization: null, page: null }),
+    });
+  }
+  if (params.hospital) {
+    chips.push({
+      key: "hospital",
+      label: "Hospital",
+      value: params.hospital,
+      onRemove: () => void setParams({ hospital: null, page: null }),
+    });
+  }
+  if (params.from || params.to) {
+    chips.push({
+      key: "added",
+      label: "Added",
+      value: dateRangeLabel(params.from, params.to),
+      onRemove: () => void setParams({ from: null, to: null, page: null }),
+    });
+  }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <SearchInput
-        className="w-full sm:w-72"
-        placeholder="Search name, hospital, phone or email"
-        value={params.search}
-        // The box updates on every keystroke; the URL catches up once typing pauses.
-        onChange={(search) =>
-          setParams({ search, page: null }, { limitUrlUpdates: debounce(300) })
-        }
-      />
-      <FilterSelect
-        label="Specialization"
-        allLabel="All specializations"
-        value={params.specialization}
-        options={toOptions(filters?.specializations)}
-        onChange={(specialization) => setParams({ specialization, page: null })}
-      />
-      <FilterSelect
-        label="Hospital"
-        allLabel="All hospitals"
-        value={params.hospital}
-        options={toOptions(filters?.hospitals)}
-        onChange={(hospital) => setParams({ hospital, page: null })}
-      />
-      <DateRangeFilter
-        label="Added"
-        from={params.from}
-        to={params.to}
-        onChange={(range) => setParams({ ...range, page: null })}
-      />
-      {hasFilters && (
-        <Button variant="ghost" onClick={() => setParams(null)}>
-          Clear filters
-        </Button>
-      )}
-    </div>
+    <>
+      <ListToolbar>
+        <SearchInput
+          className="min-w-0 flex-1"
+          placeholder="Search name, hospital, phone or email"
+          value={params.search}
+          // The box updates on every keystroke; the URL catches up once typing pauses.
+          onChange={(search) =>
+            setParams({ search, page: null }, { limitUrlUpdates: debounce(300) })
+          }
+        />
+        <FilterSheet
+          activeCount={chips.length}
+          onClear={() => void clearFilters()}
+          doneLabel={
+            total === undefined
+              ? "Done"
+              : `Show ${formatNumber(total)} ${total === 1 ? "doctor" : "doctors"}`
+          }
+        >
+          <FilterField label="Sort by" className="md:hidden">
+            <SortSelect
+              className="w-full"
+              sortable={DOCTOR_SORTABLE}
+              value={params.sort}
+              onChange={(sort) => setParams({ sort, page: null })}
+            />
+          </FilterField>
+          <FilterField label="Specialization">
+            <FilterSelect
+              className="w-full"
+              label="Specialization"
+              allLabel="All specializations"
+              value={params.specialization}
+              options={toOptions(filters?.specializations)}
+              onChange={(specialization) => setParams({ specialization, page: null })}
+            />
+          </FilterField>
+          <FilterField label="Hospital">
+            <FilterSelect
+              className="w-full"
+              label="Hospital"
+              allLabel="All hospitals"
+              value={params.hospital}
+              options={toOptions(filters?.hospitals)}
+              onChange={(hospital) => setParams({ hospital, page: null })}
+            />
+          </FilterField>
+          <FilterField label="Date added">
+            <DateRangeFilter
+              className="w-full"
+              label="Added"
+              from={params.from}
+              to={params.to}
+              onChange={(range) => setParams({ ...range, page: null })}
+            />
+          </FilterField>
+        </FilterSheet>
+        <DensityToggle />
+      </ListToolbar>
+      <ActiveFilters chips={chips} onClear={() => void clearFilters()} />
+    </>
   );
 }
 
 function DoctorsResults({ getRowActions }: { getRowActions: (doctor: Doctor) => RowActionGroups }) {
-  const [params, setParams] = useQueryStates(doctorParams);
+  const { params, setParams, search, query } = useDoctorList();
   const queryClient = useQueryClient();
-
-  // Search waits for a pause in typing; every other filter applies at once.
-  const search = useDebouncedValue(params.search);
-  const query = toDoctorQuery({ ...params, search });
   const { data, error, isPending, isPlaceholderData, refetch } = useQuery(doctorQueries.list(query));
 
   const page = data?.meta.page ?? 1;
@@ -219,16 +280,6 @@ function DoctorsResults({ getRowActions }: { getRowActions: (doctor: Doctor) => 
 
   return (
     <>
-      <ListHeader total={data.meta.total} singular="doctor" plural="doctors">
-        {/* Keys the bars in the Patients column; cards print their counts instead. */}
-        <ConditionKey className="mr-2 hidden xl:flex" />
-        <SortSelect
-          sortable={DOCTOR_SORTABLE}
-          value={params.sort}
-          onChange={(sort) => setParams({ sort, page: null })}
-        />
-        <DensityToggle />
-      </ListHeader>
       <DataTable
         id="doctors"
         columns={columns}
@@ -242,12 +293,16 @@ function DoctorsResults({ getRowActions }: { getRowActions: (doctor: Doctor) => 
         getActionsLabel={(doctor) => `Actions for ${doctor.name}`}
         renderCard={(doctor, actions) => <DoctorCard doctor={doctor} actions={actions} />}
         isStale={isPlaceholderData || search !== params.search}
+        resetScrollKey={data.meta.page}
       />
       <DataTablePagination
         meta={data.meta}
         onPageChange={(next) => setParams({ page: next })}
         onLimitChange={(limit) => setParams({ limit, page: null })}
-      />
+      >
+        {/* Keys the bars in the Patients column; cards print their counts instead. */}
+        <ConditionKey className="hidden xl:flex" />
+      </DataTablePagination>
     </>
   );
 }
@@ -257,12 +312,9 @@ export function DoctorsView() {
   const rowActions = useDoctorRowActions();
 
   return (
-    <div className="flex flex-col gap-4">
+    <ListLayout fill after={rowActions.dialogs}>
       <DoctorsToolbar />
-      <div className="overflow-hidden rounded-2xl border bg-card">
-        <DoctorsResults getRowActions={rowActions.getActions} />
-      </div>
-      {rowActions.dialogs}
-    </div>
+      <DoctorsResults getRowActions={rowActions.getActions} />
+    </ListLayout>
   );
 }

@@ -14,6 +14,9 @@ import { CommandPalette } from "@/features/search/command-palette";
  * Below `md` the document scrolls instead, and the panel is the page background itself:
  * no ancestor of the content may form a stacking context there, or the primary action
  * pinned into the top bar would be painted underneath it.
+ *
+ * A page that renders `data-fill-page` (the lists) is held to the panel's height instead
+ * of growing past it, so its table scrolls and the panel does not.
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -39,8 +42,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           className="flex flex-1 flex-col outline-none md:min-h-0 md:panel-scroll md:rounded-2xl md:border md:bg-background md:shadow-panel"
         >
           {/* Anchors each page's header artwork to the panel's full width. */}
-          <div className="relative flex flex-1 flex-col md:isolate">
-            <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pt-5 pb-12 sm:px-6 md:px-8 md:pt-8 lg:px-10">
+          <div className="relative flex flex-1 flex-col md:isolate md:has-[[data-fill-page]]:min-h-0">
+            <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pt-5 pb-12 sm:px-6 md:px-8 md:pt-8 md:has-[[data-fill-page]]:min-h-0 md:has-[[data-fill-page]]:pb-8 lg:px-10">
               {children}
             </div>
           </div>
