@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "pnpm api:types",
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm api:types && next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
-    "api:pull": "curl -fsS ${API_URL:-http://localhost:4000}/openapi.json -o openapi.json",
-    "api:generate": "openapi-ts"
+    "typecheck": "pnpm api:types && tsc --noEmit",
+    "postinstall": "pnpm api:types",
+    "api:pull": "curl -fsS ${API_URL:-http://localhost:4000}/openapi.json -o openapi.json && pnpm api:types",
+    "api:types": "openapi-typescript openapi.json -o src/lib/api/openapi.d.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -24,6 +26,7 @@
     "lucide-react": "^1.70.0",
     "next": "16.4.5",
     "nuqs": "^2.10.2",
+    "openapi-fetch": "^0.17.0",
     "react": "19.3.0",
     "react-day-picker": "^10.0.2",
     "react-dom": "19.3.0",
@@ -36,7 +39,6 @@
     "zustand": "^5.1.0"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.99.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -44,6 +46,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

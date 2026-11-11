@@ -1,16 +1,5 @@
 import { keepPreviousData, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  type ApiContext,
-  type CreateDoctor,
-  createDoctor,
-  deleteDoctor,
-  getDoctor,
-  getDoctorAnalytics,
-  getDoctorFilters,
-  listDoctors,
-  type UpdateDoctor,
-  updateDoctor,
-} from "@/lib/api";
+import { api, type ApiContext, type CreateDoctor, type UpdateDoctor, unwrap } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import type { DoctorListQuery } from "./params";
 
@@ -22,8 +11,7 @@ export const doctorQueries = {
   list: (query: DoctorListQuery, context?: ApiContext) =>
     queryOptions({
       queryKey: [...queryKeys.doctors, "list", query],
-      queryFn: async ({ signal }) =>
-        (await listDoctors({ query, signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) => unwrap(api.GET("/api/v1/doctors", { params: { query }, signal, ...context })),
       // Keep the current page on screen while the next one loads.
       placeholderData: keepPreviousData,
     }),
@@ -31,24 +19,24 @@ export const doctorQueries = {
   detail: (id: string, context?: ApiContext) =>
     queryOptions({
       queryKey: [...queryKeys.doctors, "detail", id],
-      queryFn: async ({ signal }) =>
-        (await getDoctor({ path: { id }, signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) =>
+        unwrap(api.GET("/api/v1/doctors/{id}", { params: { path: { id } }, signal, ...context })),
     }),
 
   /** Months are grouped in the visitor's time zone, so this one is fetched by the browser. */
   analytics: (id: string, timezone: string) =>
     queryOptions({
       queryKey: [...queryKeys.doctors, "analytics", id, timezone],
-      queryFn: async ({ signal }) =>
-        (await getDoctorAnalytics({ path: { id }, query: { timezone }, signal, throwOnError: true }))
-          .data,
+      queryFn: ({ signal }) =>
+        unwrap(
+          api.GET("/api/v1/doctors/{id}/analytics", { params: { path: { id }, query: { timezone } }, signal }),
+        ),
     }),
 
   filters: (context?: ApiContext) =>
     queryOptions({
       queryKey: [...queryKeys.doctors, "filters"],
-      queryFn: async ({ signal }) =>
-        (await getDoctorFilters({ signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) => unwrap(api.GET("/api/v1/doctors/filters", { signal, ...context })),
       staleTime: 5 * 60_000,
     }),
 };
@@ -66,8 +54,7 @@ function useInvalidateDoctors() {
 export function useCreateDoctor() {
   const invalidate = useInvalidateDoctors();
   return useMutation({
-    mutationFn: async (body: CreateDoctor) =>
-      (await createDoctor({ body, throwOnError: true })).data,
+    mutationFn: (body: CreateDoctor) => unwrap(api.POST("/api/v1/doctors", { body })),
     // Returning the promise keeps the mutation pending until the lists are fresh.
     onSuccess: invalidate,
   });
@@ -76,8 +63,8 @@ export function useCreateDoctor() {
 export function useUpdateDoctor(id: string) {
   const invalidate = useInvalidateDoctors();
   return useMutation({
-    mutationFn: async (body: UpdateDoctor) =>
-      (await updateDoctor({ path: { id }, body, throwOnError: true })).data,
+    mutationFn: (body: UpdateDoctor) =>
+      unwrap(api.PATCH("/api/v1/doctors/{id}", { params: { path: { id } }, body })),
     onSuccess: invalidate,
   });
 }
@@ -86,7 +73,7 @@ export function useDeleteDoctor() {
   const invalidate = useInvalidateDoctors();
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoctor({ path: { id }, throwOnError: true });
+      await unwrap(api.DELETE("/api/v1/doctors/{id}", { params: { path: { id } } }));
     },
     onSuccess: invalidate,
   });

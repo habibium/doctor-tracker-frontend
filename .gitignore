@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# written from openapi.json by `pnpm api:types`, which install, build and typecheck run
+/src/lib/api/openapi.d.ts

@@ -1,3 +1,6 @@
 allowBuilds:
   sharp: false
   unrs-resolver: false
+
+# Runs the postinstall that writes the API types even when node_modules is already up to date.
+optimisticRepeatInstall: false

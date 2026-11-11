@@ -1,20 +1,6 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { parseAsStringLiteral } from "nuqs/server";
-import {
-  type ApiContext,
-  getAnalyticsSummary,
-  getConditionBreakdown,
-  getConditionMix,
-  getCoverage,
-  getDemographics,
-  getDiagnosisRanking,
-  getDiagnosisTrends,
-  getIntakeHours,
-  getPatientsPerDoctor,
-  getRegistrations,
-  getWorkload,
-  type Registrations,
-} from "@/lib/api";
+import { api, type ApiContext, type Registrations, unwrap } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 
 export type Range = Registrations["range"];
@@ -64,9 +50,8 @@ export const analyticsQueries = {
   summary: (range: Range, context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "summary", range],
-      queryFn: async ({ signal }) =>
-        (await getAnalyticsSummary({ query: { range }, signal, throwOnError: true, ...context }))
-          .data,
+      queryFn: ({ signal }) =>
+        unwrap(api.GET("/api/v1/analytics/summary", { params: { query: { range } }, signal, ...context })),
       placeholderData: keepPreviousData,
     }),
 
@@ -74,8 +59,8 @@ export const analyticsQueries = {
   registrations: (range: Range, timezone: string) =>
     queryOptions({
       queryKey: [...key, "registrations", range, timezone],
-      queryFn: async ({ signal }) =>
-        (await getRegistrations({ query: { range, timezone }, signal, throwOnError: true })).data,
+      queryFn: ({ signal }) =>
+        unwrap(api.GET("/api/v1/analytics/registrations", { params: { query: { range, timezone } }, signal })),
       placeholderData: keepPreviousData,
     }),
 
@@ -83,88 +68,92 @@ export const analyticsQueries = {
   intakeHours: (range: Range, timezone: string) =>
     queryOptions({
       queryKey: [...key, "intake-hours", range, timezone],
-      queryFn: async ({ signal }) =>
-        (await getIntakeHours({ query: { range, timezone }, signal, throwOnError: true })).data,
+      queryFn: ({ signal }) =>
+        unwrap(api.GET("/api/v1/analytics/intake-hours", { params: { query: { range, timezone } }, signal })),
       placeholderData: keepPreviousData,
     }),
 
   topDoctors: (context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "patients-per-doctor", TOP_DOCTORS],
-      queryFn: async ({ signal }) =>
-        (
-          await getPatientsPerDoctor({
-            query: { limit: TOP_DOCTORS },
+      queryFn: ({ signal }) =>
+        unwrap(
+          api.GET("/api/v1/analytics/patients-per-doctor", {
+            params: { query: { limit: TOP_DOCTORS } },
             signal,
-            throwOnError: true,
             ...context,
-          })
-        ).data,
+          }),
+        ),
     }),
 
   criticalDoctors: (context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "patients-per-doctor", TOP_DOCTORS, "critical"],
-      queryFn: async ({ signal }) =>
-        (
-          await getPatientsPerDoctor({
-            query: { limit: TOP_DOCTORS, condition: "critical" },
+      queryFn: ({ signal }) =>
+        unwrap(
+          api.GET("/api/v1/analytics/patients-per-doctor", {
+            params: { query: { limit: TOP_DOCTORS, condition: "critical" } },
             signal,
-            throwOnError: true,
             ...context,
-          })
-        ).data,
+          }),
+        ),
     }),
 
   conditions: (context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "conditions"],
-      queryFn: async ({ signal }) =>
-        (await getConditionBreakdown({ signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) => unwrap(api.GET("/api/v1/analytics/conditions", { signal, ...context })),
     }),
 
   conditionMix: (by: MixGroup, context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "condition-mix", by],
-      queryFn: async ({ signal }) =>
-        (await getConditionMix({ query: { by }, signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) =>
+        unwrap(api.GET("/api/v1/analytics/condition-mix", { params: { query: { by } }, signal, ...context })),
       placeholderData: keepPreviousData,
     }),
 
   workload: (context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "workload"],
-      queryFn: async ({ signal }) =>
-        (await getWorkload({ signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) => unwrap(api.GET("/api/v1/analytics/workload", { signal, ...context })),
     }),
 
   coverage: (context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "coverage"],
-      queryFn: async ({ signal }) => (await getCoverage({ signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) => unwrap(api.GET("/api/v1/analytics/coverage", { signal, ...context })),
     }),
 
   diagnoses: (context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "diagnoses", ALL_DIAGNOSES],
-      queryFn: async ({ signal }) =>
-        (await getDiagnosisRanking({ query: { limit: ALL_DIAGNOSES }, signal, throwOnError: true, ...context }))
-          .data,
+      queryFn: ({ signal }) =>
+        unwrap(
+          api.GET("/api/v1/analytics/diagnoses", {
+            params: { query: { limit: ALL_DIAGNOSES } },
+            signal,
+            ...context,
+          }),
+        ),
     }),
 
   /** Months are read in the visitor's time zone: browser only, like registrations. */
   diagnosisTrends: (diagnoses: string[], timezone: string) =>
     queryOptions({
       queryKey: [...key, "diagnosis-trends", diagnoses, timezone],
-      queryFn: async ({ signal }) =>
-        (await getDiagnosisTrends({ query: { diagnosis: diagnoses, timezone }, signal, throwOnError: true }))
-          .data,
+      queryFn: ({ signal }) =>
+        unwrap(
+          api.GET("/api/v1/analytics/diagnosis-trends", {
+            params: { query: { diagnosis: diagnoses, timezone } },
+            signal,
+          }),
+        ),
     }),
 
   demographics: (context?: ApiContext) =>
     queryOptions({
       queryKey: [...key, "demographics"],
-      queryFn: async ({ signal }) =>
-        (await getDemographics({ signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) => unwrap(api.GET("/api/v1/analytics/demographics", { signal, ...context })),
     }),
 };

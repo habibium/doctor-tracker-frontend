@@ -1,15 +1,12 @@
 import { keepPreviousData, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  api,
   type ApiContext,
   type CreatePatient,
-  createDoctorPatient,
-  deleteDoctorPatient,
-  deletePatient,
-  listPatients,
   type Patient,
   type PatientList,
   type UpdatePatient,
-  updatePatient,
+  unwrap,
 } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import type { PatientListQuery } from "./params";
@@ -21,8 +18,7 @@ export const patientQueries = {
   list: (query: PatientListQuery, context?: ApiContext) =>
     queryOptions({
       queryKey: [...listKey, query],
-      queryFn: async ({ signal }) =>
-        (await listPatients({ query, signal, throwOnError: true, ...context })).data,
+      queryFn: ({ signal }) => unwrap(api.GET("/api/v1/patients", { params: { query }, signal, ...context })),
       placeholderData: keepPreviousData,
     }),
 };
@@ -41,8 +37,8 @@ function useInvalidatePatients() {
 export function useCreatePatient() {
   const invalidate = useInvalidatePatients();
   return useMutation({
-    mutationFn: async ({ doctorId, ...body }: CreatePatient) =>
-      (await createDoctorPatient({ path: { id: doctorId }, body, throwOnError: true })).data,
+    mutationFn: ({ doctorId, ...body }: CreatePatient) =>
+      unwrap(api.POST("/api/v1/doctors/{id}/patients", { params: { path: { id: doctorId } }, body })),
     onSuccess: invalidate,
   });
 }
@@ -50,8 +46,8 @@ export function useCreatePatient() {
 export function useUpdatePatient(id: string) {
   const invalidate = useInvalidatePatients();
   return useMutation({
-    mutationFn: async (body: UpdatePatient) =>
-      (await updatePatient({ path: { id }, body, throwOnError: true })).data,
+    mutationFn: (body: UpdatePatient) =>
+      unwrap(api.PATCH("/api/v1/patients/{id}", { params: { path: { id } }, body })),
     onSuccess: invalidate,
   });
 }
@@ -68,9 +64,9 @@ export function useDeletePatient() {
     mutationFn: async (patient: Patient) => {
       if (patient.doctor) {
         const path = { id: patient.doctor.id, patientId: patient.id };
-        await deleteDoctorPatient({ path, throwOnError: true });
+        await unwrap(api.DELETE("/api/v1/doctors/{id}/patients/{patientId}", { params: { path } }));
       } else {
-        await deletePatient({ path: { id: patient.id }, throwOnError: true });
+        await unwrap(api.DELETE("/api/v1/patients/{id}", { params: { path: { id: patient.id } } }));
       }
     },
     onMutate: async (patient) => {

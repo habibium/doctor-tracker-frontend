@@ -1,4 +1,6 @@
-import type { ErrorResponse } from "./generated/types.gen";
+import type { components } from "./openapi";
+
+type ErrorResponse = components["schemas"]["ErrorResponse"];
 
 export interface ApiErrorDetail {
   path: string;
