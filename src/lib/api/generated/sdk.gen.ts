@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateDoctorData, CreateDoctorErrors, CreateDoctorPatientData, CreateDoctorPatientErrors, CreateDoctorPatientResponses, CreateDoctorResponses, CreatePatientData, CreatePatientErrors, CreatePatientResponses, CreateUserData, CreateUserErrors, CreateUserResponses, DeleteDoctorData, DeleteDoctorErrors, DeleteDoctorPatientData, DeleteDoctorPatientErrors, DeleteDoctorPatientResponses, DeleteDoctorResponses, DeletePatientData, DeletePatientErrors, DeletePatientResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, GetAnalyticsSummaryData, GetAnalyticsSummaryErrors, GetAnalyticsSummaryResponses, GetConditionBreakdownData, GetConditionBreakdownErrors, GetConditionBreakdownResponses, GetConditionMixData, GetConditionMixErrors, GetConditionMixResponses, GetDemographicsData, GetDemographicsErrors, GetDemographicsResponses, GetDoctorAnalyticsData, GetDoctorAnalyticsErrors, GetDoctorAnalyticsResponses, GetDoctorData, GetDoctorErrors, GetDoctorFiltersData, GetDoctorFiltersErrors, GetDoctorFiltersResponses, GetDoctorResponses, GetIntakeHoursData, GetIntakeHoursErrors, GetIntakeHoursResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPatientsPerDoctorData, GetPatientsPerDoctorErrors, GetPatientsPerDoctorResponses, GetRegistrationsData, GetRegistrationsErrors, GetRegistrationsResponses, GetSpecializationBreakdownData, GetSpecializationBreakdownErrors, GetSpecializationBreakdownResponses, GetWorkloadData, GetWorkloadErrors, GetWorkloadResponses, ListDoctorPatientsData, ListDoctorPatientsErrors, ListDoctorPatientsResponses, ListDoctorsData, ListDoctorsErrors, ListDoctorsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, ListUsersData, ListUsersErrors, ListUsersResponses, ResetUserPasswordData, ResetUserPasswordErrors, ResetUserPasswordResponses, UpdateDoctorData, UpdateDoctorErrors, UpdateDoctorResponses, UpdatePatientData, UpdatePatientErrors, UpdatePatientResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses } from './types.gen';
+import type { CreateDoctorData, CreateDoctorErrors, CreateDoctorPatientData, CreateDoctorPatientErrors, CreateDoctorPatientResponses, CreateDoctorResponses, CreatePatientData, CreatePatientErrors, CreatePatientResponses, CreateUserData, CreateUserErrors, CreateUserResponses, DeleteDoctorData, DeleteDoctorErrors, DeleteDoctorPatientData, DeleteDoctorPatientErrors, DeleteDoctorPatientResponses, DeleteDoctorResponses, DeletePatientData, DeletePatientErrors, DeletePatientResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, GetAnalyticsSummaryData, GetAnalyticsSummaryErrors, GetAnalyticsSummaryResponses, GetConditionBreakdownData, GetConditionBreakdownErrors, GetConditionBreakdownResponses, GetConditionMixData, GetConditionMixErrors, GetConditionMixResponses, GetCoverageData, GetCoverageErrors, GetCoverageResponses, GetDemographicsData, GetDemographicsErrors, GetDemographicsResponses, GetDiagnosisRankingData, GetDiagnosisRankingErrors, GetDiagnosisRankingResponses, GetDiagnosisTrendsData, GetDiagnosisTrendsErrors, GetDiagnosisTrendsResponses, GetDoctorAnalyticsData, GetDoctorAnalyticsErrors, GetDoctorAnalyticsResponses, GetDoctorData, GetDoctorErrors, GetDoctorFiltersData, GetDoctorFiltersErrors, GetDoctorFiltersResponses, GetDoctorResponses, GetIntakeHoursData, GetIntakeHoursErrors, GetIntakeHoursResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPatientsPerDoctorData, GetPatientsPerDoctorErrors, GetPatientsPerDoctorResponses, GetRegistrationsData, GetRegistrationsErrors, GetRegistrationsResponses, GetSpecializationBreakdownData, GetSpecializationBreakdownErrors, GetSpecializationBreakdownResponses, GetWorkloadData, GetWorkloadErrors, GetWorkloadResponses, ListDoctorPatientsData, ListDoctorPatientsErrors, ListDoctorPatientsResponses, ListDoctorsData, ListDoctorsErrors, ListDoctorsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, ListUsersData, ListUsersErrors, ListUsersResponses, ResetUserPasswordData, ResetUserPasswordErrors, ResetUserPasswordResponses, UpdateDoctorData, UpdateDoctorErrors, UpdateDoctorResponses, UpdatePatientData, UpdatePatientErrors, UpdatePatientResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -295,6 +295,45 @@ export const getConditionMix = <ThrowOnError extends boolean = false>(options?: 
             type: 'apiKey'
         }],
     url: '/api/v1/analytics/condition-mix',
+    ...options
+});
+
+/**
+ * Doctors and patients for every hospital and specialization pair
+ */
+export const getCoverage = <ThrowOnError extends boolean = false>(options?: Options<GetCoverageData, ThrowOnError>): RequestResult<GetCoverageResponses, GetCoverageErrors, ThrowOnError> => (options?.client ?? client).get<GetCoverageResponses, GetCoverageErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/analytics/coverage',
+    ...options
+});
+
+/**
+ * The most common diagnoses, with recent intake
+ */
+export const getDiagnosisRanking = <ThrowOnError extends boolean = false>(options?: Options<GetDiagnosisRankingData, ThrowOnError>): RequestResult<GetDiagnosisRankingResponses, GetDiagnosisRankingErrors, ThrowOnError> => (options?.client ?? client).get<GetDiagnosisRankingResponses, GetDiagnosisRankingErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/analytics/diagnoses',
+    ...options
+});
+
+/**
+ * New patients per month for chosen diagnoses, this year against last
+ */
+export const getDiagnosisTrends = <ThrowOnError extends boolean = false>(options: Options<GetDiagnosisTrendsData, ThrowOnError>): RequestResult<GetDiagnosisTrendsResponses, GetDiagnosisTrendsErrors, ThrowOnError> => (options.client ?? client).get<GetDiagnosisTrendsResponses, GetDiagnosisTrendsErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/analytics/diagnosis-trends',
     ...options
 });
 

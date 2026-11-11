@@ -537,6 +537,17 @@
           },
           {
             "in": "query",
+            "name": "diagnosis",
+            "schema": {
+              "description": "Exact diagnosis, as recorded",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "description": "Exact diagnosis, as recorded"
+          },
+          {
+            "in": "query",
             "name": "from",
             "schema": {
               "description": "Created on or after this date",
@@ -834,6 +845,17 @@
             "schema": {
               "$ref": "#/components/schemas/Gender"
             }
+          },
+          {
+            "in": "query",
+            "name": "diagnosis",
+            "schema": {
+              "description": "Exact diagnosis, as recorded",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "description": "Exact diagnosis, as recorded"
           },
           {
             "in": "query",
@@ -1501,6 +1523,153 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ConditionMix"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/coverage": {
+      "get": {
+        "operationId": "getCoverage",
+        "summary": "Doctors and patients for every hospital and specialization pair",
+        "tags": ["Analytics"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Hospital and specialization totals, and every pair that has a doctor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Coverage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/diagnoses": {
+      "get": {
+        "operationId": "getDiagnosisRanking",
+        "summary": "The most common diagnoses, with recent intake",
+        "tags": ["Analytics"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Diagnoses by patients in care, most first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosisRanking"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/diagnosis-trends": {
+      "get": {
+        "operationId": "getDiagnosisTrends",
+        "summary": "New patients per month for chosen diagnoses, this year against last",
+        "tags": ["Analytics"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "diagnosis",
+            "schema": {
+              "description": "Exact diagnoses to chart; repeat the parameter for each, up to 12",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 12
+            },
+            "required": true,
+            "description": "Exact diagnoses to chart; repeat the parameter for each, up to 12"
+          },
+          {
+            "in": "query",
+            "name": "timezone",
+            "schema": {
+              "default": "UTC",
+              "description": "Time zone used to group patients into calendar months",
+              "type": "string"
+            },
+            "description": "Time zone used to group patients into calendar months"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Monthly series for this year so far and all of last year",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosisTrends"
                 }
               }
             }
@@ -2649,6 +2818,10 @@
           "newDoctors": {
             "type": "integer"
           },
+          "previousNewDoctors": {
+            "type": "integer",
+            "description": "Doctors added in the preceding window of the same length"
+          },
           "newPatients": {
             "type": "integer"
           },
@@ -2664,6 +2837,7 @@
           "averagePatientsPerDoctor",
           "criticalPatients",
           "newDoctors",
+          "previousNewDoctors",
           "newPatients",
           "previousNewPatients"
         ],
@@ -2699,9 +2873,36 @@
               "required": ["date", "patients", "doctors"],
               "additionalProperties": false
             }
+          },
+          "holidays": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Holiday"
+            },
+            "description": "Bangladesh public holidays (Dhaka calendar days) that overlap the window"
           }
         },
-        "required": ["range", "interval", "points"],
+        "required": ["range", "interval", "points", "holidays"],
+        "additionalProperties": false
+      },
+      "Holiday": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "description": "First day, inclusive"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "description": "Last day, inclusive"
+          }
+        },
+        "required": ["name", "start", "end"],
         "additionalProperties": false
       },
       "IntakeHours": {
@@ -2825,6 +3026,174 @@
           ],
           "additionalProperties": false
         }
+      },
+      "Coverage": {
+        "type": "object",
+        "properties": {
+          "hospitals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "doctors": {
+                  "type": "integer"
+                },
+                "patients": {
+                  "type": "integer"
+                }
+              },
+              "required": ["name", "doctors", "patients"],
+              "additionalProperties": false
+            },
+            "description": "Most doctors first"
+          },
+          "specializations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "doctors": {
+                  "type": "integer"
+                },
+                "patients": {
+                  "type": "integer"
+                },
+                "hospitals": {
+                  "type": "integer",
+                  "description": "Hospitals with at least one such doctor"
+                }
+              },
+              "required": ["name", "doctors", "patients", "hospitals"],
+              "additionalProperties": false
+            },
+            "description": "Most doctors first"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "hospital": {
+                  "type": "string"
+                },
+                "specialization": {
+                  "type": "string"
+                },
+                "doctors": {
+                  "type": "integer"
+                },
+                "patients": {
+                  "type": "integer"
+                }
+              },
+              "required": ["hospital", "specialization", "doctors", "patients"],
+              "additionalProperties": false
+            },
+            "description": "Only pairs with at least one doctor; any other pair is a gap"
+          }
+        },
+        "required": ["hospitals", "specializations", "cells"],
+        "additionalProperties": false
+      },
+      "DiagnosisRanking": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/DiagnosisCount"
+        },
+        "description": "Most patients first"
+      },
+      "DiagnosisCount": {
+        "type": "object",
+        "properties": {
+          "diagnosis": {
+            "type": "string"
+          },
+          "patients": {
+            "type": "integer"
+          },
+          "last30Days": {
+            "type": "integer",
+            "description": "Registered in the last 30 days"
+          },
+          "previous30Days": {
+            "type": "integer",
+            "description": "Registered in the 30 days before those"
+          }
+        },
+        "required": ["diagnosis", "patients", "last30Days", "previous30Days"],
+        "additionalProperties": false
+      },
+      "DiagnosisTrends": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "description": "The current calendar year in the requested time zone"
+          },
+          "month": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "The current month, 1 to 12, still running"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "diagnosis": {
+                  "type": "string"
+                },
+                "thisYear": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "description": "New patients from January to the current month"
+                },
+                "lastYear": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "description": "New patients in each month of last year, January to December"
+                }
+              },
+              "required": ["diagnosis", "thisYear", "lastYear"],
+              "additionalProperties": false
+            }
+          },
+          "allPatients": {
+            "type": "object",
+            "properties": {
+              "thisYear": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "All new patients from January to the current month"
+              },
+              "lastYear": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "All new patients in each month of last year"
+              }
+            },
+            "required": ["thisYear", "lastYear"],
+            "additionalProperties": false,
+            "description": "Every diagnosis together, the baseline for growth"
+          }
+        },
+        "required": ["year", "month", "series", "allPatients"],
+        "additionalProperties": false
       },
       "SpecializationBreakdown": {
         "type": "array",
@@ -2982,9 +3351,16 @@
               "required": ["gender", "patients"],
               "additionalProperties": false
             }
+          },
+          "diagnoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiagnosisCount"
+            },
+            "description": "All of the doctor's diagnoses, most patients first"
           }
         },
-        "required": ["conditions", "monthly", "ageGroups", "genders"],
+        "required": ["conditions", "monthly", "ageGroups", "genders", "diagnoses"],
         "additionalProperties": false
       },
       "UserList": {

@@ -168,6 +168,10 @@ export type AnalyticsSummary = {
     averagePatientsPerDoctor: number;
     criticalPatients: number;
     newDoctors: number;
+    /**
+     * Doctors added in the preceding window of the same length
+     */
+    previousNewDoctors: number;
     newPatients: number;
     /**
      * New patients in the preceding window of the same length
@@ -186,6 +190,22 @@ export type Registrations = {
         patients: number;
         doctors: number;
     }>;
+    /**
+     * Bangladesh public holidays (Dhaka calendar days) that overlap the window
+     */
+    holidays: Array<Holiday>;
+};
+
+export type Holiday = {
+    name: string;
+    /**
+     * First day, inclusive
+     */
+    start: string;
+    /**
+     * Last day, inclusive
+     */
+    end: string;
 };
 
 export type IntakeHours = {
@@ -232,6 +252,91 @@ export type ConditionMix = Array<{
     under_observation: number;
     critical: number;
 }>;
+
+export type Coverage = {
+    /**
+     * Most doctors first
+     */
+    hospitals: Array<{
+        name: string;
+        doctors: number;
+        patients: number;
+    }>;
+    /**
+     * Most doctors first
+     */
+    specializations: Array<{
+        name: string;
+        doctors: number;
+        patients: number;
+        /**
+         * Hospitals with at least one such doctor
+         */
+        hospitals: number;
+    }>;
+    /**
+     * Only pairs with at least one doctor; any other pair is a gap
+     */
+    cells: Array<{
+        hospital: string;
+        specialization: string;
+        doctors: number;
+        patients: number;
+    }>;
+};
+
+/**
+ * Most patients first
+ */
+export type DiagnosisRanking = Array<DiagnosisCount>;
+
+export type DiagnosisCount = {
+    diagnosis: string;
+    patients: number;
+    /**
+     * Registered in the last 30 days
+     */
+    last30Days: number;
+    /**
+     * Registered in the 30 days before those
+     */
+    previous30Days: number;
+};
+
+export type DiagnosisTrends = {
+    /**
+     * The current calendar year in the requested time zone
+     */
+    year: number;
+    /**
+     * The current month, 1 to 12, still running
+     */
+    month: number;
+    series: Array<{
+        diagnosis: string;
+        /**
+         * New patients from January to the current month
+         */
+        thisYear: Array<number>;
+        /**
+         * New patients in each month of last year, January to December
+         */
+        lastYear: Array<number>;
+    }>;
+    /**
+     * Every diagnosis together, the baseline for growth
+     */
+    allPatients: {
+        /**
+         * All new patients from January to the current month
+         */
+        thisYear: Array<number>;
+        /**
+         * All new patients in each month of last year
+         */
+        lastYear: Array<number>;
+    };
+};
 
 export type SpecializationBreakdown = Array<{
     specialization: string;
@@ -289,6 +394,10 @@ export type DoctorAnalytics = {
         gender: Gender;
         patients: number;
     }>;
+    /**
+     * All of the doctor's diagnoses, most patients first
+     */
+    diagnoses: Array<DiagnosisCount>;
 };
 
 export type UserList = {
@@ -557,6 +666,10 @@ export type ListDoctorPatientsData = {
         condition?: PatientCondition;
         gender?: Gender;
         /**
+         * Exact diagnosis, as recorded
+         */
+        diagnosis?: string;
+        /**
          * Created on or after this date
          */
         from?: string;
@@ -689,6 +802,10 @@ export type ListPatientsData = {
         search?: string;
         condition?: PatientCondition;
         gender?: Gender;
+        /**
+         * Exact diagnosis, as recorded
+         */
+        diagnosis?: string;
         /**
          * Created on or after this date
          */
@@ -1082,6 +1199,100 @@ export type GetConditionMixResponses = {
 };
 
 export type GetConditionMixResponse = GetConditionMixResponses[keyof GetConditionMixResponses];
+
+export type GetCoverageData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/analytics/coverage';
+};
+
+export type GetCoverageErrors = {
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+};
+
+export type GetCoverageError = GetCoverageErrors[keyof GetCoverageErrors];
+
+export type GetCoverageResponses = {
+    /**
+     * Hospital and specialization totals, and every pair that has a doctor
+     */
+    200: Coverage;
+};
+
+export type GetCoverageResponse = GetCoverageResponses[keyof GetCoverageResponses];
+
+export type GetDiagnosisRankingData = {
+    body?: never;
+    path?: never;
+    query?: {
+        limit?: number;
+    };
+    url: '/api/v1/analytics/diagnoses';
+};
+
+export type GetDiagnosisRankingErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+};
+
+export type GetDiagnosisRankingError = GetDiagnosisRankingErrors[keyof GetDiagnosisRankingErrors];
+
+export type GetDiagnosisRankingResponses = {
+    /**
+     * Diagnoses by patients in care, most first
+     */
+    200: DiagnosisRanking;
+};
+
+export type GetDiagnosisRankingResponse = GetDiagnosisRankingResponses[keyof GetDiagnosisRankingResponses];
+
+export type GetDiagnosisTrendsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Exact diagnoses to chart; repeat the parameter for each, up to 12
+         */
+        diagnosis: Array<string>;
+        /**
+         * Time zone used to group patients into calendar months
+         */
+        timezone?: string;
+    };
+    url: '/api/v1/analytics/diagnosis-trends';
+};
+
+export type GetDiagnosisTrendsErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+};
+
+export type GetDiagnosisTrendsError = GetDiagnosisTrendsErrors[keyof GetDiagnosisTrendsErrors];
+
+export type GetDiagnosisTrendsResponses = {
+    /**
+     * Monthly series for this year so far and all of last year
+     */
+    200: DiagnosisTrends;
+};
+
+export type GetDiagnosisTrendsResponse = GetDiagnosisTrendsResponses[keyof GetDiagnosisTrendsResponses];
 
 export type GetSpecializationBreakdownData = {
     body?: never;
