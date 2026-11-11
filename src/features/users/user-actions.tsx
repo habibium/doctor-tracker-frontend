@@ -36,10 +36,8 @@ export function AddUserButton() {
 type RowDialog = { type: "edit" | "password" | "deactivate" | "delete"; user: User };
 
 /**
- * Each row's actions and the dialogs they open, shared by the three-dot and right-click
- * menus. On your own row the actions that would lock you out stay visible but disabled,
- * with the reason; since only another admin can remove an admin, this also keeps the
- * last active admin in place. The API enforces both rules regardless.
+ * On your own row, actions that would lock you out stay visible, disabled with the reason.
+ * Only another admin can remove an admin, so this also protects the last one.
  */
 export function useUserRowActions() {
   const me = useUser();

@@ -28,7 +28,6 @@ export const STATUS_LABELS: Record<User["status"], string> = {
   deactivated: "Deactivated",
 };
 
-/** Roles are tags: admin in the brand's mint, viewer neutral. */
 export function RoleBadge({ role }: { role: User["role"] }) {
   const { label, icon: Icon } = ROLE_BY_VALUE[role];
   return (
@@ -60,7 +59,6 @@ export function StatusLabel({ status }: { status: User["status"] }) {
   );
 }
 
-/** Marks the signed-in admin's own row, where some actions are unavailable. */
 export function YouBadge({ className }: { className?: string }) {
   return (
     <Badge

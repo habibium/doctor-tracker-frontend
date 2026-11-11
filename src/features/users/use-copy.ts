@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { toast } from "@/components/ui/toast";
 
-/** Copies text and remembers which item was copied for a moment, to swap its icon. */
 export function useCopy() {
   const [copied, setCopied] = useState<string | null>(null);
 

@@ -10,10 +10,7 @@ interface CredentialsHandoverProps {
   password: string;
 }
 
-/**
- * The one moment the admin can see a password they set. It is masked until asked for,
- * since this is often on a shared screen, and each value copies on its own.
- */
+/** The only time a set password can be read; masked until asked for, as screens get shared. */
 export function CredentialsHandover({ email, password }: CredentialsHandoverProps) {
   const [shown, setShown] = useState(false);
   const { copied, copy } = useCopy();
