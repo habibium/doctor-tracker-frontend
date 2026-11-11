@@ -19,6 +19,7 @@ import { LocalDate } from "@/components/local-date";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConditionBar, ConditionCountsLine, ConditionKey } from "@/features/patients/condition-bar";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Doctor } from "@/lib/api";
 import { formatNumber, initials } from "@/lib/format";
@@ -74,6 +75,14 @@ const columns = [
     size: 112,
     meta: { align: "end" },
   }),
+  column.display({
+    id: "patientMix",
+    header: "Patient mix",
+    cell: ({ row }) => (
+      <ConditionBar counts={row.original.conditionCounts} label={`${row.original.name}'s patients`} />
+    ),
+    size: 144,
+  }),
   column.accessor("createdAt", {
     header: "Added",
     cell: ({ getValue }) => <LocalDate value={getValue()} className="text-muted-foreground" />,
@@ -103,6 +112,13 @@ function DoctorCard({ doctor, actions }: { doctor: Doctor; actions: ReactNode })
         <div>
           <dt className="text-xs text-muted-foreground">Phone</dt>
           <dd className="tabular">{doctor.phone}</dd>
+        </div>
+        <div className="col-span-2 flex flex-col gap-1.5">
+          <dt className="text-xs text-muted-foreground">Patient mix</dt>
+          <dd className="flex flex-col gap-2">
+            <ConditionBar counts={doctor.conditionCounts} label={`${doctor.name}'s patients`} />
+            <ConditionCountsLine counts={doctor.conditionCounts} />
+          </dd>
         </div>
       </dl>
     </div>
@@ -195,6 +211,8 @@ function DoctorsResults({ getRowActions }: { getRowActions: (doctor: Doctor) => 
   return (
     <>
       <ListHeader total={data.meta.total} singular="doctor" plural="doctors">
+        {/* Keys the patient mix column; cards print their counts instead. */}
+        <ConditionKey className="mr-2 hidden xl:flex" />
         <SortSelect
           sortable={DOCTOR_SORTABLE}
           value={params.sort}
