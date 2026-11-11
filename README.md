@@ -8,7 +8,7 @@ Doctor Tracker is an admin portal for clinics that need to see, at a glance, who
 | Users | For admins only: add a user with a role and an initial password, edit name and role, reset a password, deactivate, reactivate and delete. Everyone can change their own password. |
 | Doctors | Add, edit and delete. Search by name, hospital, phone or email. Filter by specialization, hospital and date added. Sort by name, specialization, hospital, patient count or date added. Each row shows the doctor's patient count beside its split by condition. |
 | A doctor's page | Contact details, three charts about that doctor's patients, and their patient list with its own search, filters and sorting. Add a patient under the doctor, edit one, or delete one from the list. |
-| Patients | Every patient, with search by name, diagnosis or phone, filters for condition, gender, doctor and registration date, sorting (including by severity), paging, edit and delete. |
+| Patients | Every patient, with search by name, diagnosis or phone, filters for condition, diagnosis, gender, doctor and registration date, sorting (including by severity), paging, edit and delete. |
 | Dashboard | Totals, patients per doctor, the condition breakdown, how evenly the load is spread, which hospitals lack which specialists, where the critical patients are, registrations over time and by weekday and hour with public holidays marked, the most common diagnoses, seasonal illness against last year, age and gender. |
 | Everywhere | A command palette on `⌘K` / `Ctrl K`, live doctor and patient counts in the sidebar, light and dark themes, and layouts for phone, tablet and desktop. |
 
