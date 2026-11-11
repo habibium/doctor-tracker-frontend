@@ -71,7 +71,7 @@ function BrandLink() {
       href="/dashboard"
       aria-label="Doctor Tracker, go to the dashboard"
       onClick={() => setOpenMobile(false)}
-      className="flex h-12 items-center gap-2.5 rounded-xl px-2 ring-sidebar-ring outline-none focus-visible:ring-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+      className="flex h-12 items-center gap-2.5 rounded-xl px-2.5 ring-sidebar-ring outline-none focus-visible:ring-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
     >
       <Logo size={32} />
       <Wordmark className="text-[1.1875rem] group-data-[collapsible=icon]:hidden" />
@@ -85,7 +85,7 @@ function SidebarControls() {
   const label = isMobile ? "Close menu" : state === "expanded" ? "Collapse sidebar" : "Expand sidebar";
 
   return (
-    <div className="flex items-center justify-between gap-2 px-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:px-0">
+    <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
       <ThemeSwitch className="group-data-[collapsible=icon]:hidden" />
       <ThemeToggle side="right" align="end" className="hidden group-data-[collapsible=icon]:flex" />
       <Tooltip>
