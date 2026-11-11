@@ -242,6 +242,21 @@
   mask-composite: intersect;
 }
 
+/*
+ * Sign-in rings: each drifts to its outer neighbour's resting state, so restarting together leaves no seam.
+ * 150 steps is 30 a second: continuous to the eye at this speed, and a cap on the repaints the stroke needs.
+ */
+@utility ring-wave {
+  animation: ring-wave 5s steps(150) infinite;
+}
+
+@keyframes ring-wave {
+  to {
+    transform: scale(var(--ring-wave-scale));
+    opacity: var(--ring-wave-opacity);
+  }
+}
+
 /* The plane runs from the logo's blue at the top to its mint at the bottom. */
 @utility brand-plane {
   background-image: linear-gradient(to bottom, var(--sidebar) 35%, var(--plane-mint) 100%);

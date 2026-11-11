@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, type CSSProperties } from "react";
 import type { Metadata } from "next";
 import { BrandLockup, Logo } from "@/components/brand";
 import { crossPath } from "@/components/page-motif";
@@ -6,10 +6,30 @@ import { LoginForm } from "@/features/auth/login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-/** Cross outlines radiating from the logo, in a 1400 × 1400 box drawn at 56rem. */
-const RINGS = [360, 480, 600, 720, 840, 960].map((size) =>
-  crossPath(700, 700, size, size * 0.2, size * 0.16, size * 0.07),
-);
+/** The logo's cross; every ring is this one outline at a different scale. */
+const RING_WIDTH = 100;
+const RING = crossPath(0, 0, RING_WIDTH, 20, 16, 7);
+
+/**
+ * Where a ring rests, as its width in a 1400 × 1400 box drawn at 56rem. The first stop is on
+ * the logo's edge and the last is past the still design; a ring is invisible at both.
+ */
+const RING_STOPS = [
+  { width: 240, opacity: 0 },
+  { width: 360, opacity: 0.24 },
+  { width: 480, opacity: 0.21 },
+  { width: 600, opacity: 0.18 },
+  { width: 720, opacity: 0.15 },
+  { width: 840, opacity: 0.12 },
+  { width: 960, opacity: 0.09 },
+  { width: 1080, opacity: 0 },
+];
+
+/** Each ring rests at one stop and, when in motion, drifts to the next. */
+const RINGS = RING_STOPS.slice(0, -1).map((stop, index) => ({
+  rest: stop,
+  next: RING_STOPS[index + 1],
+}));
 
 export default function LoginPage() {
   return (
@@ -39,15 +59,25 @@ export default function LoginPage() {
         className="relative isolate m-3 hidden overflow-hidden rounded-[2rem] bg-brand-panel p-12 text-brand-panel-foreground lg:block xl:p-14"
       >
         <div className="pointer-events-none absolute top-[60%] left-[68%] -z-10 size-[56rem] -translate-x-1/2 -translate-y-1/2">
-          <svg viewBox="0 0 1400 1400" className="size-full" focusable="false">
-            {RINGS.map((d, index) => (
+          <svg viewBox="-700 -700 1400 1400" className="size-full" focusable="false">
+            {RINGS.map(({ rest, next }) => (
               <path
-                key={index}
-                d={d}
+                key={rest.width}
+                d={RING}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
-                style={{ opacity: 0.24 - index * 0.03 }}
+                // A non-scaling stroke is measured on screen: 2 of the box's 1400 units at 56rem.
+                strokeWidth="0.08rem"
+                vectorEffect="non-scaling-stroke"
+                className="motion-safe:ring-wave"
+                style={
+                  {
+                    transform: `scale(${rest.width / RING_WIDTH})`,
+                    opacity: rest.opacity,
+                    "--ring-wave-scale": next.width / RING_WIDTH,
+                    "--ring-wave-opacity": next.opacity,
+                  } as CSSProperties
+                }
               />
             ))}
           </svg>
