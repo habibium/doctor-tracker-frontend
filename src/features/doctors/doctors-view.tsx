@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { debounce, useQueryStates } from "nuqs";
-import { createColumns, DataTable } from "@/components/data-table/data-table";
+import { actionsColumn, createColumns, DataTable } from "@/components/data-table/data-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
 import { DateRangeFilter } from "@/components/data-table/date-range-filter";
@@ -12,7 +12,9 @@ import { DensityToggle } from "@/components/data-table/density-toggle";
 import { FilterSelect } from "@/components/data-table/filter-select";
 import { ListHeader } from "@/components/data-table/list-header";
 import { LoadError, NoResults } from "@/components/data-table/list-states";
+import type { RowActionGroups } from "@/components/data-table/row-actions";
 import { SearchInput } from "@/components/data-table/search-input";
+import { SortSelect } from "@/components/data-table/sort-select";
 import { LocalDate } from "@/components/local-date";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +22,9 @@ import { Button } from "@/components/ui/button";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Doctor } from "@/lib/api";
 import { formatNumber, initials } from "@/lib/format";
-import { SORT_OPTIONS } from "@/lib/list-params";
-import { DoctorRowActions } from "./doctor-actions";
-import { doctorParams, toDoctorQuery } from "./params";
+import type { PinnedColumns } from "@/stores/preferences";
+import { useDoctorRowActions } from "./doctor-actions";
+import { DOCTOR_SORTABLE, doctorParams, toDoctorQuery } from "./params";
 import { doctorQueries } from "./queries";
 
 const column = createColumns<Doctor>();
@@ -47,54 +49,47 @@ function DoctorName({ doctor }: { doctor: Doctor }) {
 }
 
 // Defined once at module scope: a new array each render would rebuild the table model.
+// Sizes are minimum widths in px; the table scrolls sideways when they do not fit.
 const columns = [
   column.display({
     id: "doctor",
     header: "Doctor",
     cell: ({ row }) => <DoctorName doctor={row.original} />,
+    size: 248,
   }),
   column.accessor("specialization", {
     header: "Specialization",
     cell: ({ getValue }) => <Badge variant="secondary">{getValue()}</Badge>,
+    size: 200,
   }),
-  column.accessor("hospital", { header: "Hospital" }),
+  column.accessor("hospital", { header: "Hospital", size: 208 }),
   column.accessor("phone", {
     header: "Phone",
     cell: ({ getValue }) => <span className="tabular">{getValue()}</span>,
+    size: 148,
   }),
   column.accessor("patientCount", {
     header: "Patients",
     cell: ({ getValue }) => <span className="tabular">{formatNumber(getValue())}</span>,
+    size: 112,
+    meta: { align: "end" },
   }),
   column.accessor("createdAt", {
     header: "Added",
     cell: ({ getValue }) => <LocalDate value={getValue()} className="text-muted-foreground" />,
+    size: 128,
   }),
-  column.display({
-    id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => <DoctorRowActions doctor={row.original} />,
-  }),
+  actionsColumn<Doctor>(),
 ];
 
-// The table is fixed-layout, so these widths hold and long values truncate instead of
-// pushing other columns around. Columns without a width share what is left.
-const COLUMN_CLASSES = {
-  doctor: "w-[27%]",
-  specialization: "w-[17%] truncate",
-  hospital: "truncate",
-  phone: "hidden w-36 xl:table-cell",
-  patientCount: "w-20 text-right",
-  createdAt: "hidden w-28 lg:table-cell",
-  actions: "w-12 text-right",
-};
+const DEFAULT_PINNING: PinnedColumns = { start: ["doctor"], end: ["actions"] };
 
-function DoctorCard({ doctor }: { doctor: Doctor }) {
+function DoctorCard({ doctor, actions }: { doctor: Doctor; actions: ReactNode }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <DoctorName doctor={doctor} />
-        <DoctorRowActions doctor={doctor} />
+        {actions}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
         <Badge variant="secondary">{doctor.specialization}</Badge>
@@ -164,7 +159,7 @@ function DoctorsToolbar() {
   );
 }
 
-function DoctorsResults() {
+function DoctorsResults({ getRowActions }: { getRowActions: (doctor: Doctor) => RowActionGroups }) {
   const [params, setParams] = useQueryStates(doctorParams);
   const queryClient = useQueryClient();
 
@@ -200,19 +195,25 @@ function DoctorsResults() {
   return (
     <>
       <ListHeader total={data.meta.total} singular="doctor" plural="doctors">
-        <FilterSelect
-          label="Sort order"
+        <SortSelect
+          sortable={DOCTOR_SORTABLE}
           value={params.sort}
-          options={SORT_OPTIONS}
           onChange={(sort) => setParams({ sort, page: null })}
         />
         <DensityToggle />
       </ListHeader>
       <DataTable
+        id="doctors"
         columns={columns}
         data={data.data}
-        columnClassNames={COLUMN_CLASSES}
-        renderCard={(doctor) => <DoctorCard doctor={doctor} />}
+        defaultPinning={DEFAULT_PINNING}
+        growColumn="hospital"
+        sortable={DOCTOR_SORTABLE}
+        sort={params.sort}
+        onSortChange={(sort) => setParams({ sort, page: null })}
+        getRowActions={getRowActions}
+        getActionsLabel={(doctor) => `Actions for ${doctor.name}`}
+        renderCard={(doctor, actions) => <DoctorCard doctor={doctor} actions={actions} />}
         isStale={isPlaceholderData || search !== params.search}
       />
       <DataTablePagination
@@ -225,12 +226,16 @@ function DoctorsResults() {
 }
 
 export function DoctorsView() {
+  // Held here so an open dialog outlives its row, which can vanish once the list refetches.
+  const rowActions = useDoctorRowActions();
+
   return (
     <div className="flex flex-col gap-4">
       <DoctorsToolbar />
       <div className="overflow-hidden rounded-2xl border bg-card">
-        <DoctorsResults />
+        <DoctorsResults getRowActions={rowActions.getActions} />
       </div>
+      {rowActions.dialogs}
     </div>
   );
 }

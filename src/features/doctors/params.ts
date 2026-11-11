@@ -1,9 +1,19 @@
 import { createLoader, parseAsString } from "nuqs/server";
 import type { ListDoctorsData } from "@/lib/api";
-import { dateRangeQuery, listParams, searchTerm } from "@/lib/list-params";
+import { dateRangeQuery, listParams, searchTerm, sortableColumns, sortParser } from "@/lib/list-params";
+
+export type DoctorListQuery = NonNullable<ListDoctorsData["query"]>;
+export type DoctorSort = NonNullable<DoctorListQuery["sort"]>;
+
+/** Columns the API can sort by, keyed by column id; one line makes a header sortable. */
+export const DOCTOR_SORTABLE = sortableColumns<DoctorSort>()({
+  doctor: { field: "name", label: "Name", kind: "text" },
+  createdAt: { field: "createdAt", label: "Added", kind: "date" },
+});
 
 export const doctorParams = {
   ...listParams,
+  sort: sortParser(DOCTOR_SORTABLE, "-createdAt"),
   specialization: parseAsString,
   hospital: parseAsString,
 };
@@ -11,8 +21,6 @@ export const doctorParams = {
 /** Reads the same URL state on the server, so the first page can be fetched before render. */
 export const loadDoctorParams = createLoader(doctorParams);
 export type DoctorParams = Awaited<ReturnType<typeof loadDoctorParams>>;
-
-export type DoctorListQuery = NonNullable<ListDoctorsData["query"]>;
 
 /** Server and browser both build the request here, so their query keys always match. */
 export function toDoctorQuery(params: DoctorParams): DoctorListQuery {

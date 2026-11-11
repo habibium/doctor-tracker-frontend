@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { debounce, useQueryStates } from "nuqs";
-import { createColumns, DataTable } from "@/components/data-table/data-table";
+import { actionsColumn, createColumns, DataTable } from "@/components/data-table/data-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
 import { DateRangeFilter } from "@/components/data-table/date-range-filter";
@@ -12,17 +12,19 @@ import { DensityToggle } from "@/components/data-table/density-toggle";
 import { FilterSelect } from "@/components/data-table/filter-select";
 import { ListHeader } from "@/components/data-table/list-header";
 import { LoadError, NoResults } from "@/components/data-table/list-states";
+import type { RowActionGroups } from "@/components/data-table/row-actions";
 import { SearchInput } from "@/components/data-table/search-input";
+import { SortSelect } from "@/components/data-table/sort-select";
 import { LocalDate } from "@/components/local-date";
 import { Button } from "@/components/ui/button";
 import { DoctorCombobox } from "@/features/doctors/doctor-combobox";
 import { doctorQueries } from "@/features/doctors/queries";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Patient, PatientDoctor } from "@/lib/api";
-import { SORT_OPTIONS } from "@/lib/list-params";
-import { ConditionBadge, CONDITIONS, GENDER_LABELS, GENDERS } from "./conditions";
-import { patientParams, toPatientQuery } from "./params";
-import { PatientRowActions } from "./patient-actions";
+import type { PinnedColumns } from "@/stores/preferences";
+import { CONDITION_BY_VALUE, ConditionBadge, CONDITIONS, GENDER_LABELS, GENDERS } from "./conditions";
+import { PATIENT_SORTABLE, patientParams, toPatientQuery } from "./params";
+import { usePatientRowActions } from "./patient-actions";
 import { patientQueries } from "./queries";
 
 const column = createColumns<Patient>();
@@ -49,61 +51,65 @@ function DoctorLink({ doctor }: { doctor: PatientDoctor | null }) {
 }
 
 // Defined once at module scope: a new array each render would rebuild the table model.
+// Sizes are minimum widths in px; the table scrolls sideways when they do not fit.
 const columns = [
   column.display({
     id: "patient",
     header: "Patient",
     cell: ({ row }) => <PatientName patient={row.original} />,
+    size: 208,
   }),
   column.accessor("age", {
     header: "Age",
     cell: ({ getValue }) => <span className="tabular">{getValue()}</span>,
+    size: 76,
+    meta: { align: "end" },
   }),
   column.accessor("gender", {
     header: "Gender",
     cell: ({ getValue }) => GENDER_LABELS[getValue()],
+    size: 96,
   }),
   column.accessor("condition", {
     header: "Condition",
     cell: ({ getValue }) => <ConditionBadge condition={getValue()} />,
+    size: 176,
   }),
-  column.accessor("diagnosis", { header: "Diagnosis" }),
+  column.accessor("diagnosis", { header: "Diagnosis", size: 176 }),
   column.display({
     id: "doctor",
     header: "Doctor",
     cell: ({ row }) => <DoctorLink doctor={row.original.doctor} />,
+    size: 188,
   }),
   column.accessor("createdAt", {
     header: "Registered",
     cell: ({ getValue }) => <LocalDate value={getValue()} className="text-muted-foreground" />,
+    size: 128,
   }),
-  column.display({
-    id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => <PatientRowActions patient={row.original} />,
-  }),
+  actionsColumn<Patient>(),
 ];
 
 /** On a doctor's own page every row has the same doctor, so that column is dropped. */
 const columnsWithoutDoctor = columns.filter((item) => item.id !== "doctor");
 
-const COLUMN_CLASSES = {
-  patient: "w-[22%]",
-  age: "w-16 text-right",
-  gender: "hidden w-24 xl:table-cell",
-  condition: "w-44",
-  diagnosis: "truncate",
-  doctor: "w-[18%]",
-  createdAt: "hidden w-28 lg:table-cell",
-  actions: "w-12 text-right",
-};
+const DEFAULT_PINNING: PinnedColumns = { start: ["patient"], end: ["actions"] };
 
-function PatientCard({ patient, showDoctor }: { patient: Patient; showDoctor: boolean }) {
+/** The row's leading edge takes the condition colour; the Condition column names it. */
+const conditionAccent = (patient: Patient) => CONDITION_BY_VALUE[patient.condition].fill;
+
+interface PatientCardProps {
+  patient: Patient;
+  showDoctor: boolean;
+  actions: ReactNode;
+}
+
+function PatientCard({ patient, showDoctor, actions }: PatientCardProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <PatientName patient={patient} />
-        <PatientRowActions patient={patient} />
+        {actions}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
         <ConditionBadge condition={patient.condition} />
@@ -210,7 +216,12 @@ function PatientsToolbar({ scoped }: { scoped: boolean }) {
   );
 }
 
-function PatientsResults({ doctorId }: { doctorId?: string }) {
+interface PatientsResultsProps {
+  doctorId?: string;
+  getRowActions?: (patient: Patient) => RowActionGroups;
+}
+
+function PatientsResults({ doctorId, getRowActions }: PatientsResultsProps) {
   const [params, setParams] = useQueryStates(patientParams);
   const queryClient = useQueryClient();
 
@@ -252,19 +263,28 @@ function PatientsResults({ doctorId }: { doctorId?: string }) {
   return (
     <>
       <ListHeader total={data.meta.total} singular="patient" plural="patients">
-        <FilterSelect
-          label="Sort order"
+        <SortSelect
+          sortable={PATIENT_SORTABLE}
           value={params.sort}
-          options={SORT_OPTIONS}
           onChange={(sort) => setParams({ sort, page: null })}
         />
         <DensityToggle />
       </ListHeader>
       <DataTable
+        id="patients"
         columns={doctorId ? columnsWithoutDoctor : columns}
         data={data.data}
-        columnClassNames={COLUMN_CLASSES}
-        renderCard={(patient) => <PatientCard patient={patient} showDoctor={!doctorId} />}
+        defaultPinning={DEFAULT_PINNING}
+        growColumn="diagnosis"
+        sortable={PATIENT_SORTABLE}
+        sort={params.sort}
+        onSortChange={(sort) => setParams({ sort, page: null })}
+        getRowActions={getRowActions}
+        getActionsLabel={(patient) => `Actions for ${patient.name}`}
+        rowAccent={conditionAccent}
+        renderCard={(patient, actions) => (
+          <PatientCard patient={patient} showDoctor={!doctorId} actions={actions} />
+        )}
         isStale={isPlaceholderData || search !== params.search}
       />
       <DataTablePagination
@@ -278,12 +298,16 @@ function PatientsResults({ doctorId }: { doctorId?: string }) {
 
 /** Pass `doctorId` to show one doctor's patients, as on the doctor profile page. */
 export function PatientsView({ doctorId }: { doctorId?: string }) {
+  // Held here so the delete dialog outlives its row, which is removed as soon as it is confirmed.
+  const rowActions = usePatientRowActions();
+
   return (
     <div className="flex flex-col gap-4">
       <PatientsToolbar scoped={Boolean(doctorId)} />
       <div className="overflow-hidden rounded-2xl border bg-card">
-        <PatientsResults doctorId={doctorId} />
+        <PatientsResults doctorId={doctorId} getRowActions={rowActions.getActions} />
       </div>
+      {rowActions.dialogs}
     </div>
   );
 }

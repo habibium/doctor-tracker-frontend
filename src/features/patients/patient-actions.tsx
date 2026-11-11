@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { EllipsisIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import type { RowActionGroups } from "@/components/data-table/row-actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,14 +14,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/ui/toast";
 import { useCanEdit } from "@/components/user-provider";
 import { errorMessage, type Patient, type PatientDoctor } from "@/lib/api";
@@ -48,51 +41,45 @@ export function AddPatientButton({ doctor, variant = "default" }: AddPatientButt
   );
 }
 
-export function PatientRowActions({ patient }: { patient: Patient }) {
+/**
+ * Each row's actions, and the one set of dialogs they open. The three-dot menu and the
+ * right-click menu both render `getActions`. Viewers get none, so their rows have no menu.
+ */
+export function usePatientRowActions() {
   const canEdit = useCanEdit();
   const remove = useDeletePatient();
   const [dialog, setDialog] = useState<"edit" | "delete" | null>(null);
-  if (!canEdit) return null;
+  // Kept after closing so the dialog keeps its text while it animates out.
+  const [patient, setPatient] = useState<Patient | null>(null);
 
-  function confirmDelete() {
-    setDialog(null);
-    // The row disappears at once; a failure puts it back and says why.
-    remove.mutate(patient, {
-      onSuccess: () => toast.add({ type: "success", title: "Patient deleted" }),
-      onError: (error) =>
-        toast.add({ type: "error", title: "Patient not deleted", description: errorMessage(error) }),
-    });
+  function open(type: "edit" | "delete", target: Patient) {
+    setPatient(target);
+    setDialog(type);
   }
 
-  return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={<Button variant="ghost" size="icon-sm" aria-label={`Actions for ${patient.name}`} />}
-        >
-          <EllipsisIcon />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => setDialog("edit")}>
-              <PencilIcon />
-              Edit
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem variant="destructive" onClick={() => setDialog("delete")}>
-              <Trash2Icon />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+  function confirmDelete(target: Patient) {
+    setDialog(null);
+    // The row disappears at once; a failure puts it back and says why. The promise,
+    // unlike mutate's callbacks, settles even after the row has unmounted.
+    remove.mutateAsync(target).then(
+      () => toast.add({ type: "success", title: "Patient deleted" }),
+      (error: unknown) =>
+        toast.add({ type: "error", title: "Patient not deleted", description: errorMessage(error) }),
+    );
+  }
 
+  const getActions = canEdit
+    ? (target: Patient): RowActionGroups => [
+        [{ label: "Edit", icon: PencilIcon, onSelect: () => open("edit", target) }],
+        [{ label: "Delete", icon: Trash2Icon, destructive: true, onSelect: () => open("delete", target) }],
+      ]
+    : undefined;
+
+  const dialogs = patient && (
+    <>
       {dialog === "edit" && (
         <PatientFormDialog patient={patient} open onOpenChange={() => setDialog(null)} />
       )}
-
       <AlertDialog open={dialog === "delete"} onOpenChange={() => setDialog(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -105,7 +92,7 @@ export function PatientRowActions({ patient }: { patient: Patient }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
+            <AlertDialogAction variant="destructive" onClick={() => confirmDelete(patient)}>
               Delete patient
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -113,4 +100,6 @@ export function PatientRowActions({ patient }: { patient: Patient }) {
       </AlertDialog>
     </>
   );
+
+  return { getActions, dialogs };
 }

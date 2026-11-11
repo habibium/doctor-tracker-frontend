@@ -1,18 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { EyeIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import type { RowAction, RowActionGroups } from "@/components/data-table/row-actions";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCanEdit } from "@/components/user-provider";
 import type { Doctor } from "@/lib/api";
 import { DeleteDoctorDialog } from "./delete-doctor-dialog";
@@ -33,54 +25,44 @@ export function AddDoctorButton() {
   );
 }
 
-/** The per-row menu. Each row owns its dialogs, so the column list needs no callbacks. */
-export function DoctorRowActions({ doctor }: { doctor: Doctor }) {
+type RowDialog = { type: "edit" | "delete"; doctor: Doctor };
+
+/**
+ * Each row's actions, and the one set of dialogs they open. The three-dot menu and the
+ * right-click menu both render `getActions`, so they offer exactly the same thing.
+ */
+export function useDoctorRowActions() {
   const canEdit = useCanEdit();
-  const [dialog, setDialog] = useState<"edit" | "delete" | null>(null);
+  const [dialog, setDialog] = useState<RowDialog | null>(null);
 
-  return (
+  const getActions = (doctor: Doctor): RowActionGroups => {
+    const view: RowAction = { label: "View profile", icon: EyeIcon, href: `/doctors/${doctor.id}` };
+    if (!canEdit) return [[view]];
+    return [
+      [view, { label: "Edit", icon: PencilIcon, onSelect: () => setDialog({ type: "edit", doctor }) }],
+      [
+        {
+          label: "Delete",
+          icon: Trash2Icon,
+          destructive: true,
+          onSelect: () => setDialog({ type: "delete", doctor }),
+        },
+      ],
+    ];
+  };
+
+  const dialogs = (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={<Button variant="ghost" size="icon-sm" aria-label={`Actions for ${doctor.name}`} />}
-        >
-          <EllipsisIcon />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuGroup>
-            <DropdownMenuItem render={<Link href={`/doctors/${doctor.id}`} />}>
-              <EyeIcon />
-              View profile
-            </DropdownMenuItem>
-            {canEdit && (
-              <DropdownMenuItem onClick={() => setDialog("edit")}>
-                <PencilIcon />
-                Edit
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuGroup>
-          {canEdit && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem variant="destructive" onClick={() => setDialog("delete")}>
-                  <Trash2Icon />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {dialog === "edit" && (
-        <DoctorFormDialog doctor={doctor} open onOpenChange={() => setDialog(null)} />
+      {dialog?.type === "edit" && (
+        <DoctorFormDialog doctor={dialog.doctor} open onOpenChange={() => setDialog(null)} />
       )}
-      {dialog === "delete" && (
-        <DeleteDoctorDialog doctor={doctor} open onOpenChange={() => setDialog(null)} />
+      {dialog?.type === "delete" && (
+        <DeleteDoctorDialog doctor={dialog.doctor} open onOpenChange={() => setDialog(null)} />
       )}
     </>
   );
+
+  return { getActions, dialogs };
 }
 
 /** Edit and delete for the profile page; deleting returns to the list. */
