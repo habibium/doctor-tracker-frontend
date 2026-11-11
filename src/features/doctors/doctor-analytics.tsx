@@ -116,7 +116,6 @@ function genderLine(genders: DoctorAnalytics["genders"]) {
     .join(", ");
 }
 
-/** The leading diagnosis's share, and what has brought the most patients in lately. */
 function diagnosisFinding(diagnoses: DoctorAnalytics["diagnoses"]) {
   const total = diagnoses.reduce((sum, row) => sum + row.patients, 0);
   const lead = diagnoses[0];

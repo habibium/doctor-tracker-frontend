@@ -38,7 +38,6 @@ const LABELLED_DAYS = 31;
 
 type Point = Registrations["points"][number];
 
-/** Each day's holiday, if any, for the days on the chart. */
 export function holidayDays(points: Point[], holidays: Holiday[]) {
   const names = new Map<string, string>();
   for (const point of points) {
@@ -66,7 +65,6 @@ export function registrationsFinding(data: Registrations) {
   return `${base} Shaded days are public holidays in Bangladesh: ${formatNumber(average(on))} new patients a day on those, against ${formatNumber(average(off))} on other working days.`;
 }
 
-/** Contiguous runs of the same holiday on the chart, as index ranges. */
 function holidaySpans(points: Point[], names: Map<string, string>) {
   const spans: { name: string; from: number; to: number }[] = [];
   points.forEach((point, index) => {
