@@ -263,22 +263,21 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (kind: FormKind) => vo
               onSelect={() => go(`/doctors/${doctor.id}`)}
               className={RESULT_ITEM}
             >
-              <Avatar>
-                <AvatarFallback>{initials(doctor.name)}</AvatarFallback>
-              </Avatar>
-              <span className="flex min-w-0 flex-1 flex-col">
+              <ResultRow
+                name={doctor.name}
+                terms={terms}
+                aside={
+                  <span className="tabular text-xs font-normal text-muted-foreground">
+                    {plural(doctor.patientCount, "patient")}
+                  </span>
+                }
+              >
                 <span className="truncate">
-                  <Highlight text={doctor.name} terms={terms} />
-                </span>
-                <span className="truncate text-xs font-normal text-muted-foreground">
                   <Highlight text={doctor.specialization} terms={terms} />
                   {" · "}
                   <Highlight text={doctor.hospital} terms={terms} />
                 </span>
-              </span>
-              <span className="tabular hidden shrink-0 text-xs font-normal text-muted-foreground sm:inline">
-                {plural(doctor.patientCount, "patient")}
-              </span>
+              </ResultRow>
             </CommandItem>
           )}
         </ResultGroup>
@@ -296,26 +295,21 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (kind: FormKind) => vo
               onSelect={() => go(patientHref(patient))}
               className={RESULT_ITEM}
             >
-              <Avatar>
-                <AvatarFallback>{initials(patient.name)}</AvatarFallback>
-              </Avatar>
-              <span className="flex min-w-0 flex-1 flex-col">
+              <ResultRow
+                name={patient.name}
+                terms={terms}
+                aside={<ConditionBadge condition={patient.condition} />}
+              >
                 <span className="truncate">
-                  <Highlight text={patient.name} terms={terms} />
+                  <Highlight text={patient.diagnosis} terms={terms} />
                 </span>
-                <span className="flex min-w-0 items-center gap-1 text-xs font-normal text-muted-foreground">
-                  <span className="truncate">
-                    <Highlight text={patient.diagnosis} terms={terms} />
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <StethoscopeIcon aria-hidden="true" className="size-3" />
-                  <span className="truncate">
-                    <span className="sr-only">Doctor: </span>
-                    {patient.doctor?.name ?? "No doctor"}
-                  </span>
+                <span aria-hidden="true">·</span>
+                <StethoscopeIcon aria-hidden="true" className="size-3" />
+                <span className="truncate">
+                  <span className="sr-only">Doctor: </span>
+                  {patient.doctor?.name ?? "No doctor"}
                 </span>
-              </span>
-              <ConditionBadge condition={patient.condition} />
+              </ResultRow>
             </CommandItem>
           )}
         </ResultGroup>
@@ -375,6 +369,36 @@ function CommandGroupOf({ heading, commands }: { heading: string; commands: Pale
         </CommandItem>
       ))}
     </CommandGroup>
+  );
+}
+
+/** Name and a short fact share the first line, so the detail line gets the full width. */
+function ResultRow({
+  name,
+  terms,
+  aside,
+  children,
+}: {
+  name: string;
+  terms: string[];
+  aside: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <Avatar>
+        <AvatarFallback>{initials(name)}</AvatarFallback>
+      </Avatar>
+      <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5">
+        <span className="truncate">
+          <Highlight text={name} terms={terms} />
+        </span>
+        {aside}
+        <span className="col-span-2 flex min-w-0 items-center gap-1 text-xs font-normal text-muted-foreground">
+          {children}
+        </span>
+      </span>
+    </>
   );
 }
 
