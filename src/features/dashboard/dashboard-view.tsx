@@ -323,7 +323,7 @@ function Seasonal() {
       title="Seasonal illness"
       description={trends.data ? baselineFinding(trends.data) : "The illnesses that rise with Bangladesh's seasons, this year against last."}
     >
-      <div className={`${BOARD} lg:grid-cols-3`}>
+      <div className={`${BOARD} xl:grid-cols-3`}>
         {WATCH.map((group) => {
           const series = trends.data && groupSeries(trends.data, group.diagnoses);
           return (
@@ -333,7 +333,7 @@ function Seasonal() {
               description={series && trends.data ? seasonFinding(series, trends.data.month) : `New patients each month.`}
             >
               <div className="flex flex-col gap-4">
-                <QueryContent query={trends} fallback={<Skeleton className="h-[12.5rem] w-full rounded-xl" />}>
+                <QueryContent query={trends} fallback={<Skeleton className="h-[11.9375rem] w-full rounded-xl" />}>
                   {(data) => <SeasonChart series={groupSeries(data, group.diagnoses)} year={data.year} group={group} />}
                 </QueryContent>
                 <WatchedDiagnoses group={group} />

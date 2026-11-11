@@ -170,14 +170,14 @@ export function CoverageMatrix({ data, metric }: { data: Coverage; metric: Cover
           role="grid"
           aria-label={`${COVERAGE_METRICS.find((item) => item.value === metric)?.label} by hospital and specialization`}
           onKeyDown={onKeyDown}
-          className="flex flex-col gap-4 @2xl/cover:grid @2xl/cover:grid-cols-[minmax(8rem,13rem)_repeat(var(--cols),minmax(0,1fr))_3.5rem] @2xl/cover:items-center @2xl/cover:gap-0.5"
+          className="flex flex-col gap-4 @[34rem]/cover:grid @[34rem]/cover:grid-cols-[minmax(7rem,min(13rem,22%))_repeat(var(--cols),minmax(0,1fr))_3.5rem] @[34rem]/cover:items-center @[34rem]/cover:gap-0.5"
           style={{ "--cols": cols } as CSSProperties}
         >
           <div
             role="row"
-            className="grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] gap-0.5 @2xl/cover:contents"
+            className="grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] gap-0.5 @[34rem]/cover:contents"
           >
-            <span role="columnheader" className="hidden text-xs text-muted-foreground @2xl/cover:block @2xl/cover:self-end @2xl/cover:pb-1">
+            <span role="columnheader" className="hidden text-xs text-muted-foreground @[34rem]/cover:block @[34rem]/cover:self-end @[34rem]/cover:pb-1">
               Hospital
             </span>
             {grid.specializations.map((specialization) => (
@@ -195,7 +195,7 @@ export function CoverageMatrix({ data, metric }: { data: Coverage; metric: Cover
                 <span className="sr-only">{specialization.name}</span>
               </Link>
             ))}
-            <span role="columnheader" className="hidden pb-1 text-right text-xs text-muted-foreground @2xl/cover:block @2xl/cover:self-end">
+            <span role="columnheader" className="hidden pb-1 text-right text-xs text-muted-foreground @[34rem]/cover:block @[34rem]/cover:self-end">
               All
             </span>
           </div>
@@ -208,13 +208,13 @@ export function CoverageMatrix({ data, metric }: { data: Coverage; metric: Cover
               <div
                 key={hospital.name}
                 role="row"
-                className="grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] items-center gap-0.5 @2xl/cover:contents"
+                className="grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] items-center gap-0.5 @[34rem]/cover:contents"
               >
                 <Link
                   role="rowheader"
                   href={doctorsHref({ hospital: hospital.name })}
                   title={hospital.name}
-                  className="col-[1/-5] row-start-1 truncate pb-1 text-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:underline @2xl/cover:col-span-1 @2xl/cover:row-start-auto @2xl/cover:pr-2 @2xl/cover:pb-0 @2xl/cover:font-normal"
+                  className="col-[1/-5] row-start-1 truncate pb-1 text-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:underline @[34rem]/cover:col-span-1 @[34rem]/cover:row-start-auto @[34rem]/cover:pr-2 @[34rem]/cover:pb-0 @[34rem]/cover:font-normal"
                 >
                   {hospital.name}
                 </Link>
@@ -233,7 +233,7 @@ export function CoverageMatrix({ data, metric }: { data: Coverage; metric: Cover
                     onFocus: () => setActive({ row, col }),
                     style: totals ? { backgroundColor: levelColor(cellLevel) } : undefined,
                     className: cn(
-                      "flex h-6 min-w-0 items-center justify-center rounded-[4px] text-[0.6875rem] tabular outline-none hover:ring-2 hover:ring-foreground focus-visible:ring-2 focus-visible:ring-foreground @2xl/cover:h-8 @2xl/cover:text-xs",
+                      "flex h-6 min-w-0 items-center justify-center rounded-[4px] text-[0.6875rem] tabular outline-none hover:ring-2 hover:ring-foreground focus-visible:ring-2 focus-visible:ring-foreground @[34rem]/cover:h-8 @[34rem]/cover:text-xs",
                       totals ? "cursor-pointer" : "cursor-default border border-dashed border-muted-foreground/45",
                       cellLevel === LEVELS && "dark:text-card",
                     ),
@@ -252,25 +252,28 @@ export function CoverageMatrix({ data, metric }: { data: Coverage; metric: Cover
                       }
                     >
                       {totals && (
-                        <span aria-hidden="true" className="hidden @2xl/cover:inline">
+                        <span
+                          aria-hidden="true"
+                          className={cn("hidden", metric === "patients" ? "@4xl/cover:inline" : "@[34rem]/cover:inline")}
+                        >
                           {formatMetric(metric, value(totals), true)}
                         </span>
                       )}
                     </ChartMark>
                   );
                 })}
-                <span className="col-[-5/-1] row-start-1 pb-1 text-right text-sm tabular text-muted-foreground @2xl/cover:col-span-1 @2xl/cover:row-start-auto @2xl/cover:pb-0 @2xl/cover:text-foreground">
+                <span className="col-[-5/-1] row-start-1 pb-1 text-right text-sm tabular text-muted-foreground @[34rem]/cover:col-span-1 @[34rem]/cover:row-start-auto @[34rem]/cover:pb-0 @[34rem]/cover:text-foreground">
                   {formatMetric(metric, value(hospital), true)}
                   <span className="sr-only"> {unit} in all</span>
                 </span>
-                <p className="col-span-full pt-1 text-xs text-muted-foreground @2xl/cover:hidden">
+                <p className="col-span-full pt-1 text-xs text-muted-foreground @[34rem]/cover:hidden">
                   {missing.length === 0 ? "Every specialization." : `No ${listNames(missing)}.`}
                 </p>
               </div>
             );
           })}
 
-          <div role="row" className="hidden @2xl/cover:contents">
+          <div role="row" className="hidden @[34rem]/cover:contents">
             <span role="rowheader" className="pt-1 text-xs text-muted-foreground">
               All hospitals
             </span>
@@ -446,7 +449,7 @@ export function CoveragePanel() {
 function CoverageSkeleton() {
   return (
     <div className="@container">
-      <Skeleton className="h-[52rem] w-full rounded-xl @2xl:h-[30rem]" />
+      <Skeleton className="h-[88rem] w-full rounded-xl @[34rem]:h-[40.25rem] @4xl:h-[37.0625rem]" />
     </div>
   );
 }
