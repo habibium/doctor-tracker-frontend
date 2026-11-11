@@ -9,12 +9,19 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
+import type { PatientDoctor } from "@/lib/api";
 import { roleQuery } from "./session";
 
 // In every signed-in page's bundle, so only the frame, shortcut and trigger live here;
 // the body (cmdk, search, actions) is a separate chunk fetched on first open.
 
 export type FormKind = "doctor" | "patient";
+
+/** `doctor` fixes the doctor of a new patient, as on that doctor's page. */
+export interface FormRequest {
+  kind: FormKind;
+  doctor?: PatientDoctor;
+}
 
 interface PaletteState {
   open: boolean;
@@ -112,10 +119,10 @@ export function CommandPalette() {
   const open = useCommandPalette((state) => state.open);
   const setOpen = useCommandPalette((state) => state.setOpen);
   const setQuery = useCommandPalette((state) => state.setQuery);
-  const [form, setForm] = useState<{ kind: FormKind; open: boolean } | null>(null);
+  const [form, setForm] = useState<(FormRequest & { open: boolean }) | null>(null);
   // A form opens only once the palette has finished closing, so each dialog hands
   // focus back to the element that had it before the palette opened.
-  const pendingForm = useRef<FormKind | null>(null);
+  const pendingForm = useRef<FormRequest | null>(null);
 
   usePaletteShortcut();
 
@@ -124,23 +131,20 @@ export function CommandPalette() {
     if (open) void queryClient.prefetchQuery(roleQuery);
   }, [open, queryClient]);
 
-  function openForm(kind: FormKind) {
-    pendingForm.current = kind;
+  function openForm(request: FormRequest) {
+    pendingForm.current = request;
     setOpen(false);
   }
 
   function onOpenChangeComplete(isOpen: boolean) {
     if (isOpen) return;
     setQuery("");
-    const kind = pendingForm.current;
+    const request = pendingForm.current;
     pendingForm.current = null;
-    if (kind) setForm({ kind, open: true });
+    if (request) setForm({ ...request, open: true });
   }
 
-  const formProps = (kind: FormKind) => ({
-    open: form?.kind === kind && form.open,
-    onOpenChange: (next: boolean) => setForm({ kind, open: next }),
-  });
+  const onFormOpenChange = (next: boolean) => setForm((current) => current && { ...current, open: next });
 
   return (
     <>
@@ -158,8 +162,10 @@ export function CommandPalette() {
           <PaletteBody onOpenForm={openForm} />
         </DialogContent>
       </Dialog>
-      {form?.kind === "doctor" && <DoctorFormDialog {...formProps("doctor")} />}
-      {form?.kind === "patient" && <PatientFormDialog {...formProps("patient")} />}
+      {form?.kind === "doctor" && <DoctorFormDialog open={form.open} onOpenChange={onFormOpenChange} />}
+      {form?.kind === "patient" && (
+        <PatientFormDialog doctor={form.doctor} open={form.open} onOpenChange={onFormOpenChange} />
+      )}
     </>
   );
 }

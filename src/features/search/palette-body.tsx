@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRightIcon,
@@ -16,6 +16,7 @@ import {
   Rows4Icon,
   StethoscopeIcon,
   SunIcon,
+  UserRoundPlusIcon,
   UsersRoundIcon,
   XIcon,
 } from "lucide-react";
@@ -34,6 +35,7 @@ import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
+import { doctorQueries } from "@/features/doctors/queries";
 import { ConditionBadge } from "@/features/patients/conditions";
 import type { Doctor, Patient } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
@@ -41,7 +43,7 @@ import { formatNumber, initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { type Density, type Theme, usePreferences } from "@/stores/preferences";
 import {
-  type FormKind,
+  type FormRequest,
   LIST_HEIGHT,
   preloadForm,
   SEARCH_PLACEHOLDER,
@@ -92,8 +94,9 @@ const patientHref = (patient: Patient) =>
 /** Result rows carry their own trailing content, so the item's check mark is dropped. */
 const RESULT_ITEM = "py-2 [&>svg:last-child]:hidden";
 
-export function PaletteBody({ onOpenForm }: { onOpenForm: (kind: FormKind) => void }) {
+export function PaletteBody({ onOpenForm }: { onOpenForm: (request: FormRequest) => void }) {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
   const { setOpenMobile } = useSidebar();
   const query = useCommandPalette((state) => state.query);
@@ -106,6 +109,12 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (kind: FormKind) => vo
   const { data: role } = useQuery(roleQuery);
   const [signingOut, setSigningOut] = useState(false);
   const [selected, setSelected] = useState("");
+
+  // On a doctor's page its record is already cached, so the palette can offer it by name.
+  const pageDoctorId = /^\/doctors\/([0-9a-f]{24})$/i.exec(pathname)?.[1];
+  const pageDoctor = pageDoctorId
+    ? queryClient.getQueryData(doctorQueries.detail(pageDoctorId).queryKey)
+    : undefined;
 
   const search = usePaletteSearch(query);
   const terms = searchTerms(query);
@@ -128,6 +137,20 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (kind: FormKind) => vo
   }
 
   const actions: PaletteCommand[] = [
+    ...(role === "admin" && pageDoctor
+      ? [
+          {
+            value: "add-patient-here",
+            label: `Add a patient to ${pageDoctor.name}`,
+            keywords: "new create admit register",
+            icon: UserRoundPlusIcon,
+            run: () => {
+              const { id, name, specialization, hospital } = pageDoctor;
+              onOpenForm({ kind: "patient", doctor: { id, name, specialization, hospital } });
+            },
+          },
+        ]
+      : []),
     ...(role === "admin"
       ? [
           {
@@ -135,14 +158,14 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (kind: FormKind) => vo
             label: "Add a doctor",
             keywords: "new create physician",
             icon: PlusIcon,
-            run: () => onOpenForm("doctor"),
+            run: () => onOpenForm({ kind: "doctor" }),
           },
           {
             value: "add-patient",
             label: "Add a patient",
             keywords: "new create admit register",
             icon: PlusIcon,
-            run: () => onOpenForm("patient"),
+            run: () => onOpenForm({ kind: "patient" }),
           },
         ]
       : []),
@@ -216,7 +239,7 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (kind: FormKind) => vo
       onValueChange={(value) => {
         setSelected(value);
         if (value === "add-doctor") preloadForm("doctor");
-        if (value === "add-patient") preloadForm("patient");
+        if (value.startsWith("add-patient")) preloadForm("patient");
       }}
     >
       <CommandInput autoFocus value={query} onValueChange={setQuery} placeholder={SEARCH_PLACEHOLDER}>
