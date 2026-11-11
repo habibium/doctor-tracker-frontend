@@ -5,7 +5,10 @@ import {
   getAnalyticsSummary,
   getConditionBreakdown,
   getConditionMix,
+  getCoverage,
   getDemographics,
+  getDiagnosisRanking,
+  getDiagnosisTrends,
   getIntakeHours,
   getPatientsPerDoctor,
   getRegistrations,
@@ -40,6 +43,19 @@ export const mixOrderParam = parseAsStringLiteral(["patients", "critical"] as co
 );
 
 export const TOP_DOCTORS = 8;
+
+export type CoverageMetric = "doctors" | "patients" | "load";
+export const COVERAGE_METRICS: { value: CoverageMetric; label: string }[] = [
+  { value: "doctors", label: "Doctors" },
+  { value: "patients", label: "Patients" },
+  { value: "load", label: "Per doctor" },
+];
+export const coverageParam = parseAsStringLiteral(COVERAGE_METRICS.map((metric) => metric.value)).withDefault(
+  "doctors",
+);
+
+/** Every diagnosis: the clinic has about sixty, and both rankings are drawn from the same rows. */
+const ALL_DIAGNOSES = 100;
 
 const key = queryKeys.analytics;
 
@@ -120,6 +136,29 @@ export const analyticsQueries = {
       queryKey: [...key, "workload"],
       queryFn: async ({ signal }) =>
         (await getWorkload({ signal, throwOnError: true, ...context })).data,
+    }),
+
+  coverage: (context?: ApiContext) =>
+    queryOptions({
+      queryKey: [...key, "coverage"],
+      queryFn: async ({ signal }) => (await getCoverage({ signal, throwOnError: true, ...context })).data,
+    }),
+
+  diagnoses: (context?: ApiContext) =>
+    queryOptions({
+      queryKey: [...key, "diagnoses", ALL_DIAGNOSES],
+      queryFn: async ({ signal }) =>
+        (await getDiagnosisRanking({ query: { limit: ALL_DIAGNOSES }, signal, throwOnError: true, ...context }))
+          .data,
+    }),
+
+  /** Months are read in the visitor's time zone: browser only, like registrations. */
+  diagnosisTrends: (diagnoses: string[], timezone: string) =>
+    queryOptions({
+      queryKey: [...key, "diagnosis-trends", diagnoses, timezone],
+      queryFn: async ({ signal }) =>
+        (await getDiagnosisTrends({ query: { diagnosis: diagnoses, timezone }, signal, throwOnError: true }))
+          .data,
     }),
 
   demographics: (context?: ApiContext) =>

@@ -11,9 +11,20 @@ import { BarList } from "./bar-list";
 import { AgeChart, RegistrationsChart } from "./charts";
 import { ConditionCensus } from "./condition-census";
 import { ConditionMixPanel } from "./condition-mix";
+import { CoveragePanel } from "./coverage-matrix";
+import { DiagnosisPanels } from "./diagnoses";
 import { IntakeHeatmap, intakeFinding, toGrid } from "./intake-heatmap";
 import { BOARD, Panel, QueryContent, Section, useNearViewport } from "./panel";
 import { analyticsQueries, type Range, rangeParam, RANGES } from "./queries";
+import {
+  baselineFinding,
+  groupSeries,
+  SeasonChart,
+  seasonFinding,
+  WATCH,
+  WATCHED_DIAGNOSES,
+  WatchedDiagnoses,
+} from "./seasonal-watch";
 import { Delta, StatTile } from "./stat-tile";
 import { WorkloadChart, workloadFinding } from "./workload-chart";
 
@@ -98,6 +109,19 @@ function Workload() {
             )}
           </QueryContent>
         </Panel>
+      </div>
+    </Section>
+  );
+}
+
+function Coverage() {
+  return (
+    <Section
+      title="Specialist coverage"
+      description="Which specialists each hospital has, and where the gaps are."
+    >
+      <div className={BOARD}>
+        <CoveragePanel />
       </div>
     </Section>
   );
@@ -263,6 +287,54 @@ function Arrivals() {
   );
 }
 
+function Treating() {
+  return (
+    <Section
+      title="What we treat"
+      description="The diagnoses most patients in care have, and the ones bringing new patients in now."
+    >
+      <div className={`${BOARD} lg:grid-cols-2`}>
+        <DiagnosisPanels />
+      </div>
+    </Section>
+  );
+}
+
+function Seasonal() {
+  const [ref, near] = useNearViewport<HTMLElement>();
+  // Months are read in the visitor's own time zone.
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const trends = useQuery({ ...analyticsQueries.diagnosisTrends(WATCHED_DIAGNOSES, timezone), enabled: near });
+
+  return (
+    <Section
+      ref={ref}
+      title="Seasonal illness"
+      description={trends.data ? baselineFinding(trends.data) : "The illnesses that rise with Bangladesh's seasons, this year against last."}
+    >
+      <div className={`${BOARD} lg:grid-cols-3`}>
+        {WATCH.map((group) => {
+          const series = trends.data && groupSeries(trends.data, group.diagnoses);
+          return (
+            <Panel
+              key={group.key}
+              title={group.title}
+              description={series && trends.data ? seasonFinding(series, trends.data.month) : `New patients each month.`}
+            >
+              <div className="flex flex-col gap-4">
+                <QueryContent query={trends} fallback={<Skeleton className="h-[12.5rem] w-full rounded-xl" />}>
+                  {(data) => <SeasonChart series={groupSeries(data, group.diagnoses)} year={data.year} group={group} />}
+                </QueryContent>
+                <WatchedDiagnoses group={group} />
+              </div>
+            </Panel>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
+
 function Patients() {
   const demographics = useQuery(analyticsQueries.demographics());
 
@@ -302,8 +374,11 @@ export function DashboardView() {
     <div className="flex flex-col gap-10">
       <Overview />
       <Workload />
+      <Coverage />
       <Critical />
       <Arrivals />
+      <Treating />
+      <Seasonal />
       <Patients />
     </div>
   );

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,8 @@ export interface BarListItem {
   detail?: string;
   value: number;
   href?: string;
+  /** A comparison after the value, such as the change on the previous period. */
+  aside?: ReactNode;
 }
 
 /**
@@ -27,6 +30,7 @@ interface BarListProps {
 
 export function BarList({ items, unit, compact = false, fill = "bg-data" }: BarListProps) {
   const max = Math.max(1, ...items.map((item) => item.value));
+  const withAside = items.some((item) => item.aside !== undefined);
 
   return (
     <ul className="flex flex-col gap-3">
@@ -37,7 +41,9 @@ export function BarList({ items, unit, compact = false, fill = "bg-data" }: BarL
             "grid items-center gap-3 text-sm",
             compact
               ? "grid-cols-[4.5rem_minmax(0,1fr)_3.25rem]"
-              : "grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_3.25rem] sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)_3.25rem] xl:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_3.25rem]",
+              : withAside
+                ? "grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_3.25rem_3.5rem] sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)_3.25rem_3.5rem] xl:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_3.25rem_3.5rem]"
+                : "grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_3.25rem] sm:grid-cols-[minmax(0,9rem)_minmax(0,1fr)_3.25rem] xl:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_3.25rem]",
           )}
         >
           <div className="flex min-w-0 flex-col">
@@ -64,6 +70,7 @@ export function BarList({ items, unit, compact = false, fill = "bg-data" }: BarL
             {formatNumber(item.value)}
             <span className="sr-only"> {unit}</span>
           </span>
+          {withAside && <span className="text-right text-xs text-muted-foreground">{item.aside}</span>}
         </li>
       ))}
     </ul>

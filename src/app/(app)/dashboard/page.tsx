@@ -34,8 +34,8 @@ async function DashboardData({ searchParams }: Pick<PageProps<"/dashboard">, "se
   const [{ range, mix }, context] = await Promise.all([loadParams(searchParams), apiContext()]);
   const queryClient = getQueryClient();
 
-  // All in parallel. Registrations and arrival hours are left to the browser, because
-  // they are grouped in the visitor's time zone.
+  // All in parallel. Registrations, arrival hours and the seasonal months are left to the
+  // browser, because they are grouped in the visitor's time zone.
   await Promise.all([
     queryClient.prefetchQuery(analyticsQueries.summary("30d", context)),
     queryClient.prefetchQuery(analyticsQueries.summary(range, context)),
@@ -49,6 +49,8 @@ async function DashboardData({ searchParams }: Pick<PageProps<"/dashboard">, "se
       ? undefined
       : queryClient.prefetchQuery(analyticsQueries.conditionMix(mix, context)),
     queryClient.prefetchQuery(analyticsQueries.demographics(context)),
+    queryClient.prefetchQuery(analyticsQueries.coverage(context)),
+    queryClient.prefetchQuery(analyticsQueries.diagnoses(context)),
   ]);
 
   return (
