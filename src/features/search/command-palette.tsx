@@ -11,11 +11,8 @@ import { Kbd } from "@/components/ui/kbd";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { roleQuery } from "./session";
 
-/*
- * This module is in every signed-in page's bundle, so it holds only the open state, the
- * shortcut and the trigger. The palette's body (cmdk, search, actions) is a separate
- * chunk, downloaded the first time the palette opens.
- */
+// In every signed-in page's bundle, so only the frame, shortcut and trigger live here;
+// the body (cmdk, search, actions) is a separate chunk fetched on first open.
 
 export type FormKind = "doctor" | "patient";
 
@@ -35,7 +32,8 @@ export const useCommandPalette = create<PaletteState>((set, get) => ({
   open: false,
   setOpen: (open) => {
     if (open && !get().open) {
-      returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const active = document.activeElement;
+      returnFocus = active instanceof HTMLElement && active !== document.body ? active : null;
     }
     set({ open });
   },
@@ -149,7 +147,8 @@ export function CommandPalette() {
       <Dialog open={open} onOpenChange={setOpen} onOpenChangeComplete={onOpenChangeComplete}>
         <DialogContent
           showCloseButton={false}
-          finalFocus={() => (returnFocus?.isConnected ? returnFocus : true)}
+          // With nothing focused before, the dialog's default would focus the first link.
+          finalFocus={() => (returnFocus?.isConnected ? returnFocus : false)}
           className="top-3 max-w-[calc(100%-1.5rem)] translate-y-0 gap-0 overflow-hidden p-0 sm:top-[12dvh] sm:max-w-xl"
         >
           <DialogTitle className="sr-only">Search</DialogTitle>

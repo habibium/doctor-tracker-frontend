@@ -235,7 +235,7 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (kind: FormKind) => vo
         </InputGroupAddon>
       </CommandInput>
 
-      <CommandList className={cn(LIST_HEIGHT, "max-h-none")}>
+      <CommandList label="Results" className={cn(LIST_HEIGHT, "max-h-none")}>
         {pages.length > 0 && (
           <CommandGroup heading="Pages">
             {pages.map(({ href, label, icon: Icon }) => (
