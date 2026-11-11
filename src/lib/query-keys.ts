@@ -3,4 +3,5 @@ export const queryKeys = {
   doctors: ["doctors"],
   patients: ["patients"],
   analytics: ["analytics"],
+  users: ["users"],
 } as const;

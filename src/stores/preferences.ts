@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 export type Theme = "light" | "dark" | "system";
 export type Density = "comfortable" | "compact";
-export type TableId = "doctors" | "patients";
+export type TableId = "doctors" | "patients" | "users";
 
 /** Column ids pinned to each side of a table, in display order. */
 export interface PinnedColumns {
