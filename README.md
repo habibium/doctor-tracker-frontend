@@ -4,11 +4,12 @@ Doctor Tracker is an admin portal for clinics that need to see, at a glance, who
 
 | Area | What is there |
 | --- | --- |
-| Sign-in and access | Email and password against the API's sessions. Every page behind sign-in is protected. Admins can change records; viewers can only read, and the add, edit and delete controls are not rendered for them. |
+| Sign-in and access | Email and password against the API's sessions. Every page behind sign-in is protected. Admins can change records; viewers can only read, and the add, edit and delete controls are not rendered for them. There is no public sign-up and no demo account in the code. |
+| Users | For admins only: add a user with a role and an initial password, edit name and role, reset a password, deactivate, reactivate and delete. Everyone can change their own password. |
 | Doctors | Add, edit and delete. Search by name, hospital, phone or email. Filter by specialization, hospital and date added. Sort by name, specialization, hospital, patient count or date added. Each row shows the doctor's patient count beside its split by condition. |
 | A doctor's page | Contact details, three charts about that doctor's patients, and their patient list with its own search, filters and sorting. Add a patient under the doctor, edit one, or delete one from the list. |
 | Patients | Every patient, with search by name, diagnosis or phone, filters for condition, gender, doctor and registration date, sorting (including by severity), paging, edit and delete. |
-| Dashboard | Totals, patients per doctor, the condition breakdown, how evenly the load is spread, where the critical patients are, registrations over time and by weekday and hour, age and gender. |
+| Dashboard | Totals, patients per doctor, the condition breakdown, how evenly the load is spread, which hospitals lack which specialists, where the critical patients are, registrations over time and by weekday and hour with public holidays marked, the most common diagnoses, seasonal illness against last year, age and gender. |
 | Everywhere | A command palette on `⌘K` / `Ctrl K`, live doctor and patient counts in the sidebar, light and dark themes, and layouts for phone, tablet and desktop. |
 
 ## Stack
@@ -38,12 +39,12 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open `http://localhost:3000` and sign in. The sign-in page has buttons that fill in either demo account:
+Open `http://localhost:3000` and sign in with the admin account the API's seed created from your own `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`. No account or password is published in either repository; for the hosted demo they are in the submission email. From there, add anyone else on the Users page.
 
-| Role | Email | Password | Can do |
-| --- | --- | --- | --- |
-| Admin | `admin@doctortracker.dev` | `Admin@12345` | Everything |
-| Viewer | `viewer@doctortracker.dev` | `Viewer@12345` | Read only; add, edit and delete controls are hidden |
+| Role | Can do |
+| --- | --- |
+| Admin | Everything, including adding and managing users |
+| Viewer | Read only; add, edit and delete controls are hidden, and the Users page does not exist for them |
 
 ### Environment variables
 
@@ -108,9 +109,10 @@ src/
       dashboard/           Analytics
       doctors/             List, and [id] for a doctor's profile and patients
       patients/            List
+      users/               Accounts, for admins
   proxy.ts                 Redirects signed-out visitors
   features/
-    auth/ doctors/ patients/ dashboard/
+    auth/ doctors/ patients/ dashboard/ users/
                            Each holds its queries, URL params, form schema and components
     search/                Command palette: frame, lazily loaded body, search hook
   components/
@@ -165,7 +167,7 @@ After that the browser owns the data, so filtering and paging are client-side fe
 Three details made this work correctly:
 
 - **Session reads are kept out of the layout.** An early version looked up the user at the top of the signed-in layout. That made the entire shell wait for the session, left the prerendered page empty, and produced a server warning on every request. The user menu and the admin-only buttons now each sit in their own small boundary, and the shell is static again. The production build lists every signed-in route as partially prerendered.
-- **Time-zone-dependent requests stay in the browser.** A date filter means "the visitor's days", and the dashboard's daily chart and arrival heatmap group by the visitor's time zone, which the server cannot know. Those requests are skipped on the server and fetched after load, rather than being fetched twice with different parameters. On the dashboard they also wait until their section is within a screen of the viewport, so on a laptop screen the dashboard opens without a single API call from the browser, and the last two arrive as someone scrolls towards them.
+- **Time-zone-dependent requests stay in the browser.** A date filter means "the visitor's days", and the dashboard's daily chart, arrival heatmap and seasonal charts group by the visitor's time zone, which the server cannot know. Those requests are skipped on the server and fetched after load, rather than being fetched twice with different parameters. On the dashboard they also wait until their section is within a screen of the viewport, so opening it costs the browser one small request, for the sidebar's counts, and the rest arrive as someone scrolls towards them.
 - **Nothing shifts when the data lands.** The page panel reserves its scrollbar gutter, and skeletons are sized to the finished content, so a list that grows past the fold does not push the layout sideways.
 
 The trade-off is more moving parts than a client-only app: query keys must match exactly between server and browser, so both build their request through the same function (`toDoctorQuery`, `toPatientQuery`).
@@ -192,26 +194,51 @@ The trade-off is more moving parts than a client-only app: query keys must match
 **Charts**
 
 - **Each one answers a question, and says the answer.** The description under a chart's title is a sentence computed from the data, for example "Half of the 300 doctors have 63 patients or fewer, while the busiest tenth have 270 or more each." The chart is the evidence, not a puzzle.
-- **The form follows the question.** A distribution is a histogram with the median and 90th percentile marked. Parts of a whole are one segmented bar. A ranking is a sorted bar list. Two dimensions of time, weekday and hour, are a heatmap. There are no pie charts, because comparing angles is harder than comparing lengths.
+- **The form follows the question.** A distribution is a histogram with the median and 90th percentile marked. Parts of a whole are one segmented bar. A ranking is a sorted bar list. Two dimensions, weekday and hour or hospital and specialization, are a grid of cells. There are no pie charts, because comparing angles is harder than comparing lengths.
+- **Gaps are drawn, not left out.** The coverage matrix has a cell for every hospital and specialization. A pair with no doctor is a dashed empty cell, so a missing specialist is something you see rather than something you have to notice is absent. On a phone the grid would be unreadable, so each hospital becomes a strip of cells with its missing specializations named in words.
+- **A season is compared with itself.** The seasonal charts put this year's months over last year's for dengue, diarrhoeal disease and winter chest illness, with the usual season shaded. Only whole months are compared, the month still running is dashed, and the section states how much all intake grew, because a line that is up 20% in a clinic that grew 20% is not an outbreak.
+- **A dip has a reason.** Public holidays in Bangladesh are shaded on the daily registrations chart, with the average on those days against ordinary working days, so Eid is not read as a problem.
+- **Every mark leads somewhere.** A matrix cell opens the doctors at that hospital in that specialization, a diagnosis opens its patients, a bar opens the doctor. The dashboard is the way into the lists, not a poster.
 - **Colour means condition, and nothing else.** Green, violet, amber and red are reserved for the four patient conditions wherever they appear: badges, row edges, bars, form controls. Every other mark is one blue. The four colours were checked for separation under the common forms of colour blindness and for contrast in both themes, and no chart relies on colour alone.
 - **Comparable by design.** In the condition mix, critical is always the last segment, so the red ends line up down the rows, and a hairline on each bar marks the clinic-wide critical share to compare against.
-- **Usable without a pointer.** Marks have keyboard focus and tooltips, the heatmap and histograms move with the arrow keys from a single tab stop, and the condition mix and heatmap can each be opened as a plain table.
+- **Usable without a pointer.** Marks have keyboard focus and tooltips, the heatmap, matrix and histograms move with the arrow keys from a single tab stop, and the dense charts can each be opened as a plain table.
 - **Local conventions.** The heatmap's week starts on Sunday, as the working week does in Bangladesh, and hours are in the visitor's time zone.
 
 **Look and layout**
 
 - **The theme comes from the logo.** Its blue and mint are the two brand colours, each with a light-theme and a dark-theme shade chosen for contrast, and the wordmark is set in the same two colours.
-- **Blue acts, mint marks.** Each brand colour has one job. Blue is for actions, focus and data: buttons, links, focus rings and chart marks. Mint is for state: what is selected (a toggle, the current page, the active sort), what is highlighted (the item under the pointer in a menu or the command palette), filter chips and tags, and a rise in a trend. Mint is kept out of the charts on purpose: darkened enough to read on white, it lands on the green that means "stable".
+- **Blue acts, mint marks.** Each brand colour has one job. Blue is for actions, focus and data: buttons, links, focus rings and chart marks. Mint is for state: what is selected (a toggle, the current page, the active sort), what is highlighted (the item under the pointer in a menu or the command palette), and filter chips and tags. Mint is kept out of the charts on purpose: darkened enough to read on white, it lands on the green that means "stable".
 - **An inset shell.** The sidebar sits on a tinted plane that runs from the logo's blue at the top to its mint at the bottom, and the page is one rounded panel beside it, with no top bar on desktop. Search, theme and the collapse control live in the sidebar.
 - **An icon for every specialization.** All fifteen come from one family, Health Icons (CC0), in its outline set drawn for 24 px, so they match each other and sit beside the interface's own icons. Only the glyphs in use are in the code, not the whole library, and a specialization the set does not know falls back to a plain medical cross.
 - **Each page has its own header artwork**, drawn in SVG from the logo's cross: a heartbeat trace on the dashboard, a field of crosses for doctors, a ward board for patients. It is part of the prerendered shell and downloads nothing.
+- **The sign-in panel moves, quietly.** Rings leave the logo and drift outward like ripples, in a loop with no visible restart. It is CSS only, so the page stays static, and anyone who asks their system for reduced motion gets the still version.
 - **On phones** the sidebar becomes a drawer, and a top bar holds the menu button, the logo and the page's main action, so "Add patient" is always one tap away.
+
+**Accounts**
+
+- **No demo logins.** The sign-in page has no shortcut buttons and neither repository contains a password. The first admin comes from the API's environment, and every other account is made on the Users page.
+- **A password is handed over once.** Adding a user or resetting a password ends on a hand-over step: the email and the password, masked, each with a copy button, and a reminder that it will not be shown again. The password field can generate a strong one.
+- **You cannot lock yourself out.** On your own row, reset, deactivate and delete stay visible but disabled, each with its reason, and your own role cannot be changed. Because only another admin can remove an admin, one active admin always remains. The API enforces the same rules; the interface only explains them.
+- **Changes to access take effect at once.** Deactivating someone, changing their role or resetting their password ends their sessions, so their next request is refused rather than their next sign-in.
+- **The Users link costs the shell nothing.** It is rendered on the server in its own small boundary for admins, like the admin-only buttons, so the sidebar stays prerendered and nothing shifts when it arrives.
 
 **Smaller choices**
 
 - **Generated API client.** Request and response types come from the API's OpenAPI document, so the two repositories cannot drift apart silently. Form schemas are hand-written for friendly messages but checked against the generated types with `satisfies`.
 - **API errors land on fields.** A validation error from the API is shown under the input it refers to, and a duplicate email is reported on the email field.
 - **Missing records and failed loads have their own screens**, each with a way back, so a stale link never ends in a blank page.
+
+## What comes next
+
+The brief fixes the data model at doctors and the patients under them, and this project stays inside it. A clinic in Bangladesh has more moving parts, and this is how the model would grow to hold them:
+
+- **Serials and consultations.** A patient books a serial for a consultant's chamber, is seen, and usually comes back with reports. That is a `visits` collection (patient, doctor, chamber, serial, time, new or follow-up), and it unlocks the charts this dashboard cannot honestly draw yet: slot utilisation, no-shows, waiting time, the booked-to-consulted funnel.
+- **Orders and results.** Prescriptions and diagnostic tests hang off a visit, and the follow-up visit closes the loop, which makes follow-up adherence a number.
+- **Admissions.** Condition today is one field on the patient. With admissions (ward, bed, ICU, NICU or HDU, admitted and discharged times), "critical" stops being a label and becomes occupancy per unit, the number a hospital actually runs on.
+- **Chambers.** Most consultants sit at two or three hospitals. A doctor would have several chambers instead of one hospital field, and coverage would count chamber hours, not heads.
+- **Where patients come from.** A district on the patient record is enough for a map of who travels to Dhaka or Chattogram, and for which specialty.
+
+None of this changes what is already here: each new collection points at the same doctors and patients, and the lists, search and indexes carry over.
 
 ## Visual evidence
 
@@ -221,35 +248,43 @@ The trade-off is more moving parts than a client-only app: query keys must match
 | --- | --- |
 | ![Patients in care, split by condition, with totals](docs/screenshots/desktop-dashboard.png) | ![Histogram of patients per doctor beside the busiest doctors](docs/screenshots/desktop-dashboard-workload.png) |
 
-| Arrivals | Critical patients, dark theme |
+| Specialist coverage | Critical patients, dark theme |
 | --- | --- |
-| ![Daily registrations and a weekday by hour heatmap](docs/screenshots/desktop-dashboard-arrivals.png) | ![Condition mix by specialization in the dark theme](docs/screenshots/desktop-dashboard-dark.png) |
+| ![Hospitals by specialization, with empty cells where a hospital has no such doctor](docs/screenshots/desktop-dashboard-coverage.png) | ![Condition mix by specialization in the dark theme](docs/screenshots/desktop-dashboard-dark.png) |
 
-| Doctors, sorted by patients | Doctor profile |
+| Arrivals, with holidays shaded | Seasonal illness |
 | --- | --- |
-| ![Doctors list with patient counts and condition bars](docs/screenshots/desktop-doctors.png) | ![A doctor's charts and patient list](docs/screenshots/desktop-doctor-profile.png) |
+| ![Daily registrations with a public holiday shaded, and a weekday by hour heatmap](docs/screenshots/desktop-dashboard-arrivals.png) | ![Dengue, diarrhoeal and winter chest illness, this year against last](docs/screenshots/desktop-dashboard-seasonal.png) |
 
-| Patients, critical first | Filter sheet |
+| What we treat | Doctor profile |
 | --- | --- |
-| ![Patients list sorted by severity with coloured row edges](docs/screenshots/desktop-patients.png) | ![Filters in a sheet beside the list, with chips for the active ones](docs/screenshots/desktop-filters.png) |
+| ![Most common diagnoses and the ones arriving now](docs/screenshots/desktop-dashboard-diagnoses.png) | ![A doctor's charts, diagnoses and patient list](docs/screenshots/desktop-doctor-profile.png) |
 
-| Sorting and pinning | Right-click menu |
+| Doctors, sorted by patients | Patients, critical first |
 | --- | --- |
-| ![Column menu with sort and pin options over a table scrolled sideways](docs/screenshots/desktop-patients-pinned.png) | ![A row's actions opened by right click](docs/screenshots/desktop-patients-context-menu.png) |
+| ![Doctors list with specialization icons, patient counts and condition bars](docs/screenshots/desktop-doctors.png) | ![Patients list sorted by severity with coloured row edges](docs/screenshots/desktop-patients.png) |
 
-| Command palette | Patients, dark theme |
+| Filter sheet | Sorting and pinning |
 | --- | --- |
-| ![Searching doctors and patients from the command palette](docs/screenshots/desktop-command-palette.png) | ![Critical patients sorted by age in the dark theme](docs/screenshots/desktop-patients-dark.png) |
+| ![Filters in a sheet beside the list, with chips for the active ones](docs/screenshots/desktop-filters.png) | ![Column menu with sort and pin options over a table scrolled sideways](docs/screenshots/desktop-patients-pinned.png) |
 
-| Sign in |
-| --- |
-| ![Sign-in page with demo accounts](docs/screenshots/desktop-login.png) |
+| Right-click menu | Command palette |
+| --- | --- |
+| ![A row's actions opened by right click](docs/screenshots/desktop-patients-context-menu.png) | ![Searching doctors and patients from the command palette](docs/screenshots/desktop-command-palette.png) |
+
+| Users | Add a user |
+| --- | --- |
+| ![The users page, for admins](docs/screenshots/desktop-users.png) | ![Adding a user with a role and a generated password](docs/screenshots/desktop-users-add.png) |
+
+| Patients, dark theme | Sign in |
+| --- | --- |
+| ![Critical patients sorted by age in the dark theme](docs/screenshots/desktop-patients-dark.png) | ![Sign-in page](docs/screenshots/desktop-login.png) |
 
 ### Mobile
 
-| Dashboard | Condition mix | Arrival heatmap | Navigation |
+| Dashboard | Specialist coverage | Arrival heatmap | Navigation |
 | --- | --- | --- | --- |
-| ![Dashboard on a phone](docs/screenshots/mobile-dashboard.png) | ![Condition mix on a phone](docs/screenshots/mobile-condition-mix.png) | ![Heatmap turned on its side for a phone](docs/screenshots/mobile-heatmap.png) | ![Navigation drawer on a phone](docs/screenshots/mobile-navigation.png) |
+| ![Dashboard on a phone](docs/screenshots/mobile-dashboard.png) | ![Coverage as one strip per hospital on a phone](docs/screenshots/mobile-coverage.png) | ![Heatmap turned on its side for a phone](docs/screenshots/mobile-heatmap.png) | ![Navigation drawer on a phone](docs/screenshots/mobile-navigation.png) |
 
 | Doctors | Patients | Filters | Doctor profile |
 | --- | --- | --- | --- |
