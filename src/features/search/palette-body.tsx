@@ -108,11 +108,10 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (request: FormRequest)
   const [signingOut, setSigningOut] = useState(false);
   const [selected, setSelected] = useState("");
 
-  // On a doctor's page its record is already cached, so the palette can offer it by name.
+  // On a doctor's page the page caches that doctor, so the palette can offer it by name.
+  // Never fetched from here: it only reads what the page has, even if that lands later.
   const pageDoctorId = /^\/doctors\/([0-9a-f]{24})$/i.exec(pathname)?.[1];
-  const pageDoctor = pageDoctorId
-    ? queryClient.getQueryData(doctorQueries.detail(pageDoctorId).queryKey)
-    : undefined;
+  const { data: pageDoctor } = useQuery({ ...doctorQueries.detail(pageDoctorId ?? ""), enabled: false });
 
   const search = usePaletteSearch(query);
   const terms = searchTerms(query);
@@ -488,7 +487,7 @@ function EmptyState({
   }
 
   return (
-    <div className="flex flex-col items-center gap-1 px-6 py-14 text-center text-sm text-muted-foreground">
+    <div className="flex flex-col items-center gap-1 px-6 py-14 text-center text-sm text-balance text-muted-foreground">
       {message}
     </div>
   );
