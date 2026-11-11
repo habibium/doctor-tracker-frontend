@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronsUpDownIcon, LogOutIcon } from "lucide-react";
+import { ChevronsUpDownIcon, KeyRoundIcon, LogOutIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChangePasswordDialog } from "@/features/auth/change-password-dialog";
 import { authClient } from "@/lib/auth-client";
 import { initials } from "@/lib/format";
 import type { CurrentUser } from "@/lib/session";
@@ -24,6 +25,7 @@ const ROLE_LABELS = { admin: "Admin", viewer: "Viewer, read only" };
 export function UserMenu({ user }: { user: CurrentUser }) {
   const queryClient = useQueryClient();
   const [signingOut, setSigningOut] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   async function signOut() {
     setSigningOut(true);
@@ -68,6 +70,10 @@ export function UserMenu({ user }: { user: CurrentUser }) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setChangingPassword(true)}>
+                <KeyRoundIcon />
+                Change password
+              </DropdownMenuItem>
               <DropdownMenuItem disabled={signingOut} onClick={signOut}>
                 <LogOutIcon />
                 {signingOut ? "Signing out…" : "Sign out"}
@@ -75,6 +81,8 @@ export function UserMenu({ user }: { user: CurrentUser }) {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+        {/* Outside the menu, which closes as the dialog opens. */}
+        <ChangePasswordDialog open={changingPassword} onOpenChange={setChangingPassword} />
       </SidebarMenuItem>
     </SidebarMenu>
   );
