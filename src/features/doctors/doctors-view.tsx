@@ -49,6 +49,20 @@ function DoctorName({ doctor }: { doctor: Doctor }) {
   );
 }
 
+/** The count and its split share a cell, so sorting by patients orders both. */
+function PatientLoad({ doctor }: { doctor: Doctor }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="tabular w-9 shrink-0 text-right">{formatNumber(doctor.patientCount)}</span>
+      <ConditionBar
+        className="min-w-0 flex-1"
+        counts={doctor.conditionCounts}
+        label={`${doctor.name}'s patients`}
+      />
+    </div>
+  );
+}
+
 // Defined once at module scope: a new array each render would rebuild the table model.
 // Sizes are minimum widths in px; the table scrolls sideways when they do not fit.
 const columns = [
@@ -56,14 +70,19 @@ const columns = [
     id: "doctor",
     header: "Doctor",
     cell: ({ row }) => <DoctorName doctor={row.original} />,
-    size: 248,
+    size: 228,
   }),
   column.accessor("specialization", {
     header: "Specialization",
     cell: ({ getValue }) => <Badge variant="secondary">{getValue()}</Badge>,
-    size: 200,
+    size: 192,
   }),
-  column.accessor("hospital", { header: "Hospital", size: 208 }),
+  column.accessor("hospital", {
+    header: "Hospital",
+    cell: ({ getValue }) => <span className="line-clamp-2 leading-tight">{getValue()}</span>,
+    size: 176,
+    meta: { className: "whitespace-normal!" },
+  }),
   column.accessor("phone", {
     header: "Phone",
     cell: ({ getValue }) => <span className="tabular">{getValue()}</span>,
@@ -71,22 +90,13 @@ const columns = [
   }),
   column.accessor("patientCount", {
     header: "Patients",
-    cell: ({ getValue }) => <span className="tabular">{formatNumber(getValue())}</span>,
-    size: 112,
-    meta: { align: "end" },
-  }),
-  column.display({
-    id: "patientMix",
-    header: "Patient mix",
-    cell: ({ row }) => (
-      <ConditionBar counts={row.original.conditionCounts} label={`${row.original.name}'s patients`} />
-    ),
-    size: 144,
+    cell: ({ row }) => <PatientLoad doctor={row.original} />,
+    size: 160,
   }),
   column.accessor("createdAt", {
     header: "Added",
     cell: ({ getValue }) => <LocalDate value={getValue()} className="text-muted-foreground" />,
-    size: 128,
+    size: 120,
   }),
   actionsColumn<Doctor>(),
 ];
@@ -170,7 +180,6 @@ function DoctorsToolbar() {
           Clear filters
         </Button>
       )}
-
     </div>
   );
 }
@@ -211,7 +220,7 @@ function DoctorsResults({ getRowActions }: { getRowActions: (doctor: Doctor) => 
   return (
     <>
       <ListHeader total={data.meta.total} singular="doctor" plural="doctors">
-        {/* Keys the patient mix column; cards print their counts instead. */}
+        {/* Keys the bars in the Patients column; cards print their counts instead. */}
         <ConditionKey className="mr-2 hidden xl:flex" />
         <SortSelect
           sortable={DOCTOR_SORTABLE}
