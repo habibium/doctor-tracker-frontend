@@ -24,6 +24,7 @@ import { SortSelect } from "@/components/data-table/sort-select";
 import { LocalDate } from "@/components/local-date";
 import { DoctorCombobox } from "@/features/doctors/doctor-combobox";
 import { doctorQueries } from "@/features/doctors/queries";
+import { SpecializationIcon } from "@/features/doctors/specialization";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Patient, PatientDoctor } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
@@ -51,7 +52,10 @@ function DoctorLink({ doctor }: { doctor: PatientDoctor | null }) {
       <Link href={`/doctors/${doctor.id}`} className="truncate underline-offset-4 hover:underline">
         {doctor.name}
       </Link>
-      <span className="truncate text-xs text-muted-foreground">{doctor.specialization}</span>
+      <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+        <SpecializationIcon name={doctor.specialization} className="size-3.5 shrink-0" />
+        <span className="truncate">{doctor.specialization}</span>
+      </span>
     </div>
   );
 }
@@ -86,7 +90,7 @@ const columns = [
     id: "doctor",
     header: "Doctor",
     cell: ({ row }) => <DoctorLink doctor={row.original.doctor} />,
-    size: 180,
+    size: 192,
   }),
   column.accessor("createdAt", {
     header: "Registered",

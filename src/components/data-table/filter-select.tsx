@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,8 @@ import {
 interface Option<T extends string> {
   value: T;
   label: string;
+  /** Shown before the label in the list. */
+  icon?: ReactNode;
 }
 
 interface FilterSelectProps<T extends string> {
@@ -33,7 +36,7 @@ export function FilterSelect<T extends string>({
   onChange,
   className,
 }: FilterSelectProps<T>) {
-  const items: { value: T | null; label: string }[] = allLabel
+  const items: { value: T | null; label: string; icon?: ReactNode }[] = allLabel
     ? [{ value: null, label: allLabel }, ...options]
     : [...options];
 
@@ -46,6 +49,7 @@ export function FilterSelect<T extends string>({
         <SelectGroup>
           {items.map((item) => (
             <SelectItem key={item.value ?? "all"} value={item.value}>
+              {item.icon}
               {item.label}
             </SelectItem>
           ))}

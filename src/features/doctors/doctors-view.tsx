@@ -23,7 +23,6 @@ import { SearchInput } from "@/components/data-table/search-input";
 import { SortSelect } from "@/components/data-table/sort-select";
 import { LocalDate } from "@/components/local-date";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { ConditionBar, ConditionCountsLine, ConditionKey } from "@/features/patients/condition-bar";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Doctor } from "@/lib/api";
@@ -32,6 +31,7 @@ import type { PinnedColumns } from "@/stores/preferences";
 import { useDoctorRowActions } from "./doctor-actions";
 import { DOCTOR_SORTABLE, doctorParams, toDoctorQuery } from "./params";
 import { doctorQueries } from "./queries";
+import { SpecializationBadge, SpecializationIcon } from "./specialization";
 
 const column = createColumns<Doctor>();
 
@@ -79,7 +79,7 @@ const columns = [
   }),
   column.accessor("specialization", {
     header: "Specialization",
-    cell: ({ getValue }) => <Badge variant="secondary">{getValue()}</Badge>,
+    cell: ({ getValue }) => <SpecializationBadge name={getValue()} />,
     size: 204,
   }),
   column.accessor("hospital", {
@@ -116,7 +116,7 @@ function DoctorCard({ doctor, actions }: { doctor: Doctor; actions: ReactNode })
         {actions}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
-        <Badge variant="secondary">{doctor.specialization}</Badge>
+        <SpecializationBadge name={doctor.specialization} />
         <span>{doctor.hospital}</span>
       </div>
       <dl className="grid grid-cols-2 gap-2 text-sm">
@@ -154,6 +154,11 @@ function DoctorsToolbar() {
   const { data: total } = useQuery({ ...doctorQueries.list(query), select: (page) => page.meta.total });
 
   const toOptions = (values: string[] = []) => values.map((value) => ({ value, label: value }));
+  const specializations = (filters?.specializations ?? []).map((value) => ({
+    value,
+    label: value,
+    icon: <SpecializationIcon name={value} className="text-muted-foreground" />,
+  }));
   const clearFilters = () =>
     setParams({ specialization: null, hospital: null, from: null, to: null, page: null });
 
@@ -218,7 +223,7 @@ function DoctorsToolbar() {
               label="Specialization"
               allLabel="All specializations"
               value={params.specialization}
-              options={toOptions(filters?.specializations)}
+              options={specializations}
               onChange={(specialization) => setParams({ specialization, page: null })}
             />
           </FilterField>

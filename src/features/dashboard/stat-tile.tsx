@@ -15,7 +15,8 @@ export function StatTile({ label, value, detail, className }: StatTileProps) {
   return (
     <div className={cn("flex flex-col gap-1.5 bg-card p-5 md:p-6", className)}>
       <h3 className="text-sm text-muted-foreground">{label}</h3>
-      <p className="text-3xl font-semibold tracking-tight">{value}</p>
+      {/* A div: the value can be a skeleton block while it loads. */}
+      <div className="text-3xl font-semibold tracking-tight">{value}</div>
       {detail && <p className="text-sm text-muted-foreground">{detail}</p>}
     </div>
   );

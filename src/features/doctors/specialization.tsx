@@ -135,7 +135,7 @@ export function SpecializationBadge({ name, className }: { name: string; classNa
       variant="secondary"
       title={name}
       // The badge sizes icons for 12px; these glyphs need 14px to stay legible.
-      className={cn("max-w-full [&>svg]:size-3.5!", className)}
+      className={cn("max-w-full bg-accent text-accent-foreground [&>svg]:size-3.5!", className)}
     >
       <SpecializationIcon name={name} data-icon="inline-start" className="shrink-0" />
       <span className="truncate">{name}</span>

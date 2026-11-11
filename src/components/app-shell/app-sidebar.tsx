@@ -80,7 +80,7 @@ function NavLinks({ pathname }: { pathname: string | null }) {
               tooltip={label}
               aria-label={total ? `${label}, ${total}` : undefined}
               onClick={() => setOpenMobile(false)}
-              className="data-active:bg-background data-active:text-foreground data-active:shadow-xs data-active:[&_svg]:text-primary"
+              className="data-active:bg-background data-active:text-foreground data-active:shadow-xs data-active:[&_svg]:text-brand-mint"
             >
               <Icon />
               <span>{label}</span>
