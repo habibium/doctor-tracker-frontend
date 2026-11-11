@@ -22,6 +22,8 @@ export type RowAction = {
   label: string;
   icon: LucideIcon;
   destructive?: boolean;
+  /** Shown under the label of an action that can't be used on this row, saying why. */
+  disabledReason?: string;
 } & ({ href: string; onSelect?: never } | { onSelect: () => void; href?: never });
 
 /** Groups are drawn with a rule between them. No groups means the row has no actions. */
@@ -46,17 +48,28 @@ export function RowActionItems({
     <Fragment key={index}>
       {index > 0 && <Separator />}
       <Group>
-        {group.map(({ label, icon: Icon, href, onSelect, destructive }) => (
-          <Item
-            key={label}
-            variant={destructive ? "destructive" : "default"}
-            render={href ? <Link href={href} /> : undefined}
-            onClick={onSelect}
-          >
-            <Icon />
-            {label}
-          </Item>
-        ))}
+        {group.map(({ label, icon: Icon, href, onSelect, destructive, disabledReason }) =>
+          disabledReason ? (
+            // Only the action fades; the reason stays readable.
+            <Item key={label} disabled className="items-start data-disabled:opacity-100">
+              <Icon className="mt-0.5 opacity-50" />
+              <span className="flex max-w-60 flex-col gap-0.5">
+                <span className="opacity-50">{label}</span>
+                <span className="text-xs font-normal text-muted-foreground">{disabledReason}</span>
+              </span>
+            </Item>
+          ) : (
+            <Item
+              key={label}
+              variant={destructive ? "destructive" : "default"}
+              render={href ? <Link href={href} /> : undefined}
+              onClick={onSelect}
+            >
+              <Icon />
+              {label}
+            </Item>
+          ),
+        )}
       </Group>
     </Fragment>
   ));
