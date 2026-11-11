@@ -38,9 +38,19 @@ export function UserMenu({ user }: { user: CurrentUser }) {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger render={<SidebarMenuButton size="lg" />}>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                tooltip={user.name}
+                className="data-popup-open:bg-sidebar-accent"
+              />
+            }
+          >
             <Avatar>
-              <AvatarFallback>{initials(user.name)}</AvatarFallback>
+              <AvatarFallback className="bg-primary/12 font-medium text-primary dark:bg-primary/18">
+                {initials(user.name)}
+              </AvatarFallback>
             </Avatar>
             <span className="grid flex-1 text-left leading-tight">
               <span className="truncate font-medium">{user.name}</span>
@@ -48,9 +58,9 @@ export function UserMenu({ user }: { user: CurrentUser }) {
                 {ROLE_LABELS[user.role]}
               </span>
             </span>
-            <ChevronsUpDownIcon className="ml-auto" />
+            <ChevronsUpDownIcon className="ml-auto text-sidebar-foreground/60" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="min-w-56">
+          <DropdownMenuContent side="top" align="start" className="min-w-60">
             <DropdownMenuGroup>
               <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
                 {user.email}
