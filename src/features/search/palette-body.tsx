@@ -222,11 +222,15 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (request: FormRequest)
   const remoteRows = rowCount(doctors) + rowCount(patients);
   const remoteSettled =
     doctors.status === "success" && !doctors.stale && patients.status === "success" && !patients.stale;
+  const found = [
+    doctors.status === "success" && doctors.total > 0 && plural(doctors.total, "doctor"),
+    patients.status === "success" && patients.total > 0 && plural(patients.total, "patient"),
+  ].filter(Boolean);
   const announcement = !remoteSettled
     ? ""
-    : remoteRows === 0
+    : found.length === 0
       ? `No doctors or patients match ${search.term}`
-      : `${plural(doctors.total, "doctor")} and ${plural(patients.total, "patient")} found`;
+      : `${found.join(" and ")} found`;
 
   return (
     <Command
