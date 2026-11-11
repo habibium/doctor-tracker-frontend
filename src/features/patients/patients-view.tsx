@@ -57,7 +57,7 @@ const columns = [
     id: "patient",
     header: "Patient",
     cell: ({ row }) => <PatientName patient={row.original} />,
-    size: 208,
+    size: 200,
   }),
   column.accessor("age", {
     header: "Age",
@@ -73,19 +73,19 @@ const columns = [
   column.accessor("condition", {
     header: "Condition",
     cell: ({ getValue }) => <ConditionBadge condition={getValue()} />,
-    size: 176,
+    size: 168,
   }),
-  column.accessor("diagnosis", { header: "Diagnosis", size: 176 }),
+  column.accessor("diagnosis", { header: "Diagnosis", size: 168 }),
   column.display({
     id: "doctor",
     header: "Doctor",
     cell: ({ row }) => <DoctorLink doctor={row.original.doctor} />,
-    size: 188,
+    size: 180,
   }),
   column.accessor("createdAt", {
     header: "Registered",
     cell: ({ getValue }) => <LocalDate value={getValue()} className="text-muted-foreground" />,
-    size: 128,
+    size: 124,
   }),
   actionsColumn<Patient>(),
 ];
