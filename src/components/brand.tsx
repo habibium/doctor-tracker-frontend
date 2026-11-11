@@ -3,14 +3,22 @@ import { crossPath } from "@/components/page-motif";
 import { cn } from "@/lib/utils";
 
 /** The logo mark. Decorative wherever the wordmark or a label names it. */
-export function Logo({ size = 32, className }: { size?: number; className?: string }) {
+export function Logo({
+  size = 32,
+  loading = "eager",
+  className,
+}: {
+  size?: number;
+  loading?: "eager" | "lazy";
+  className?: string;
+}) {
   return (
     <Image
       src="/logo.png"
       alt=""
       width={size}
       height={size}
-      loading="eager"
+      loading={loading}
       className={cn("shrink-0 select-none", className)}
       style={{ width: size, height: size }}
       draggable={false}
