@@ -116,22 +116,15 @@ function genderLine(genders: DoctorAnalytics["genders"]) {
     .join(", ");
 }
 
+/** One sentence, so the panel is no taller once loaded; each row carries its own 30-day count. */
 function diagnosisFinding(diagnoses: DoctorAnalytics["diagnoses"]) {
   const total = diagnoses.reduce((sum, row) => sum + row.patients, 0);
   const lead = diagnoses[0];
-  if (!lead || total === 0) return "What their patients are being treated for.";
-  const parts = [`${lead.diagnosis} is ${formatPercent(lead.patients / total)} of their patients.`];
-  const recent = diagnoses.toSorted((a, b) => b.last30Days - a.last30Days || b.patients - a.patients)[0];
-  if (recent && recent.last30Days > 0) {
-    const counts = `${formatNumber(recent.last30Days)}, against ${formatNumber(recent.previous30Days)} in the 30 days before`;
-    parts.push(
-      recent === lead
-        ? `It also brought the most new patients in the last 30 days: ${counts}.`
-        : `${recent.diagnosis} brought the most new patients in the last 30 days: ${counts}.`,
-    );
-  }
-  return parts.join(" ");
+  if (!lead || total === 0) return DIAGNOSES_PLACEHOLDER;
+  return `${lead.diagnosis} is the most common, ${formatPercent(lead.patients / total)} of their patients.`;
 }
+
+const DIAGNOSES_PLACEHOLDER = "What their patients are being treated for, most common first.";
 
 function NoPatients({ name }: { name: string }) {
   return (
@@ -184,7 +177,7 @@ export function DoctorAnalyticsBoard({ doctor }: { doctor: Doctor }) {
 
       <Panel
         title="Diagnoses"
-        description={analytics.data ? diagnosisFinding(analytics.data.diagnoses) : "What their patients are being treated for."}
+        description={analytics.data ? diagnosisFinding(analytics.data.diagnoses) : DIAGNOSES_PLACEHOLDER}
       >
         <QueryContent query={analytics} fallback={<Skeleton className="h-[11.25rem] w-full rounded-xl" />}>
           {(data) => {
