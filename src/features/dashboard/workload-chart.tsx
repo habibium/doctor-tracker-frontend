@@ -71,7 +71,7 @@ export function WorkloadChart({ data }: { data: Workload }) {
                 <span className="tabular font-medium">{formatNumber(marker.value)}</span>
               </span>
               {/* The surface ring keeps the rule readable where it crosses a column. */}
-              <span className="w-px flex-1 bg-foreground shadow-[0_0_0_1px_var(--color-card)]" />
+              <span className="w-0.5 flex-1 rounded-full bg-brand-mint shadow-[0_0_0_1px_var(--color-card)]" />
             </div>
           );
         })}

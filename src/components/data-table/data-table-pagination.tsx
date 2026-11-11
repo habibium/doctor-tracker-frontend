@@ -106,7 +106,7 @@ export function DataTablePagination({
                 <Button
                   variant={item === page ? "outline" : "ghost"}
                   size="icon-sm"
-                  className="tabular w-auto min-w-8 px-2"
+                  className="tabular w-auto min-w-8 px-2 aria-[current=page]:border-brand-mint/40 aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground"
                   aria-label={`Page ${item}`}
                   aria-current={item === page ? "page" : undefined}
                   onClick={() => onPageChange(item)}

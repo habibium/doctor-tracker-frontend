@@ -20,7 +20,7 @@ import { CommandPalette } from "@/features/search/command-palette";
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider className="md:h-svh md:overflow-hidden">
+    <SidebarProvider className="md:h-svh md:overflow-hidden md:brand-plane md:**:data-[slot=sidebar-inner]:bg-transparent">
       <a
         href="#main"
         className="sr-only z-50 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"

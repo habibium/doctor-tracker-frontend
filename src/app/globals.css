@@ -42,6 +42,8 @@
   --color-card: var(--card);
   --color-brand-blue: var(--brand-blue);
   --color-brand-mint: var(--brand-mint);
+  --color-brand-mint-solid: var(--brand-mint-solid);
+  --color-on-brand-mint: var(--on-brand-mint);
   --color-brand-panel: var(--brand-panel);
   --color-brand-panel-foreground: var(--brand-panel-foreground);
   --color-motif-blue: var(--motif-blue);
@@ -90,8 +92,9 @@
   --secondary-foreground: oklch(0.3 0.05 258);
   --muted: oklch(0.966 0.008 252);
   --muted-foreground: oklch(0.52 0.03 256);
-  --accent: oklch(0.95 0.022 250);
-  --accent-foreground: oklch(0.3 0.07 258);
+  /* Mint, the logo's second colour: what is selected, highlighted or tagged. Blue stays for actions and data. */
+  --accent: oklch(0.955 0.035 172);
+  --accent-foreground: oklch(0.31 0.06 175);
   --destructive: oklch(0.55 0.21 25);
   --border: oklch(0.915 0.012 255);
   --input: oklch(0.885 0.014 255);
@@ -105,6 +108,7 @@
 
   /* The sidebar colours double as the app plane the content panel floats on. */
   --sidebar: oklch(0.957 0.014 252);
+  --plane-mint: oklch(0.945 0.036 172);
   --sidebar-foreground: oklch(0.32 0.035 258);
   --sidebar-primary: oklch(0.55 0.2 256);
   --sidebar-primary-foreground: oklch(0.99 0.004 250);
@@ -116,6 +120,8 @@
 
   --brand-blue: oklch(0.53 0.2 256);
   --brand-mint: oklch(0.57 0.13 170);
+  --brand-mint-solid: oklch(0.8 0.15 170);
+  --on-brand-mint: oklch(0.24 0.05 185);
   --brand-panel: oklch(0.48 0.18 258);
   --brand-panel-foreground: oklch(1 0 0);
   --motif-blue: oklch(0.6 0.2 256);
@@ -158,8 +164,8 @@
   --secondary-foreground: oklch(0.96 0.008 250);
   --muted: oklch(0.26 0.024 258);
   --muted-foreground: oklch(0.72 0.025 255);
-  --accent: oklch(0.28 0.04 256);
-  --accent-foreground: oklch(0.96 0.008 250);
+  --accent: oklch(0.3 0.045 172);
+  --accent-foreground: oklch(0.94 0.05 172);
   --destructive: oklch(0.68 0.19 22);
   --border: oklch(0.86 0.03 255 / 11%);
   --input: oklch(0.86 0.03 255 / 16%);
@@ -171,6 +177,7 @@
   --chart-5: oklch(0.84 0.08 250);
 
   --sidebar: oklch(0.16 0.022 258);
+  --plane-mint: oklch(0.2 0.036 180);
   --sidebar-foreground: oklch(0.82 0.02 255);
   --sidebar-primary: oklch(0.7 0.16 254);
   --sidebar-primary-foreground: oklch(0.2 0.05 258);
@@ -182,6 +189,8 @@
 
   --brand-blue: oklch(0.7 0.16 254);
   --brand-mint: oklch(0.8 0.14 170);
+  --brand-mint-solid: oklch(0.8 0.15 170);
+  --on-brand-mint: oklch(0.24 0.05 185);
   --brand-panel: oklch(0.27 0.07 258);
   --brand-panel-foreground: oklch(1 0 0);
   --motif-blue: oklch(0.68 0.17 254);
@@ -231,6 +240,11 @@
     linear-gradient(to left, black 0%, black 10%, transparent 58%),
     linear-gradient(to bottom, black 35%, transparent 100%);
   mask-composite: intersect;
+}
+
+/* The plane runs from the logo's blue at the top to its mint at the bottom. */
+@utility brand-plane {
+  background-image: linear-gradient(to bottom, var(--sidebar) 35%, var(--plane-mint) 100%);
 }
 
 /* The gutter is reserved up front, so content never shifts when a scrollbar appears. */

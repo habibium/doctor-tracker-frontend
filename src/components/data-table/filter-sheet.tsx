@@ -35,7 +35,7 @@ export function FilterSheet({ activeCount, onClear, doneLabel, children }: Filte
         <SlidersHorizontalIcon data-icon="inline-start" />
         Filters
         {activeCount > 0 && (
-          <span className="tabular flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+          <span className="tabular flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-mint-solid px-1.5 text-xs font-medium text-on-brand-mint">
             {activeCount}
           </span>
         )}
@@ -105,13 +105,13 @@ export function ActiveFilters({ chips, onClear }: { chips: FilterChip[]; onClear
           type="button"
           aria-label={`Remove filter: ${chip.label} ${chip.value}`}
           onClick={chip.onRemove}
-          className="group flex h-7 max-w-full items-center gap-1.5 rounded-full border bg-background pr-1.5 pl-2.5 text-xs outline-none transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 dark:bg-transparent"
+          className="group flex h-7 max-w-full items-center gap-1.5 rounded-full border border-brand-mint/30 bg-accent/70 pr-1.5 pl-2.5 text-xs text-accent-foreground outline-none transition-colors hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
         >
-          <span className="text-muted-foreground">{chip.label}</span>
+          <span className="opacity-70">{chip.label}</span>
           <span className="truncate font-medium">{chip.value}</span>
           <XIcon
             aria-hidden="true"
-            className="size-3.5 shrink-0 text-muted-foreground group-hover:text-foreground"
+            className="size-3.5 shrink-0 opacity-60 group-hover:opacity-100"
           />
         </button>
       ))}

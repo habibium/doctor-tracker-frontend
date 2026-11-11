@@ -73,15 +73,16 @@ export function ColumnHeader({ children, name, align = "start", sort, pin }: Col
             aria-hidden="true"
             className={cn(
               "size-3.5 shrink-0 transition-opacity",
-              !sort.direction &&
-                "opacity-0 group-hover/head:opacity-60 group-focus-within/head:opacity-60",
+              sort.direction
+                ? "text-brand-mint"
+                : "opacity-0 group-hover/head:opacity-60 group-focus-within/head:opacity-60",
             )}
           />
         </button>
       ) : (
         <span className="truncate">{children}</span>
       )}
-      {pin?.pinned && <PinIcon aria-hidden="true" className="size-3 shrink-0 text-foreground/70" />}
+      {pin?.pinned && <PinIcon aria-hidden="true" className="size-3 shrink-0 text-brand-mint" />}
       {pin && <ColumnMenu name={name} align={align} sort={sort} pin={pin} />}
     </div>
   );

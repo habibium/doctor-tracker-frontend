@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email address"),
@@ -32,6 +33,7 @@ const DEMO_ACCOUNTS = [
     email: "admin@doctortracker.dev",
     password: "Admin@12345",
     icon: ShieldCheckIcon,
+    chip: "bg-primary/10 text-primary dark:bg-primary/15",
   },
   {
     label: "Viewer",
@@ -39,6 +41,7 @@ const DEMO_ACCOUNTS = [
     email: "viewer@doctortracker.dev",
     password: "Viewer@12345",
     icon: EyeIcon,
+    chip: "bg-accent text-accent-foreground",
   },
 ];
 
@@ -144,7 +147,7 @@ export function LoginForm() {
           <span className="h-px flex-1 bg-border" />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {DEMO_ACCOUNTS.map(({ label, access, email, password, icon: Icon }) => (
+          {DEMO_ACCOUNTS.map(({ label, access, email, password, icon: Icon, chip }) => (
             <Button
               key={email}
               type="button"
@@ -152,7 +155,7 @@ export function LoginForm() {
               className="h-auto justify-start gap-3 rounded-2xl px-3 py-2.5 text-left"
               onClick={() => fillDemoAccount(email, password)}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15">
+              <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-xl", chip)}>
                 <Icon />
               </span>
               <span className="flex min-w-0 flex-col">
