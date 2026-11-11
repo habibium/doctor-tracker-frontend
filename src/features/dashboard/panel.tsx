@@ -102,6 +102,17 @@ export function QueryContent<T>({ query, fallback, children }: QueryContentProps
   );
 }
 
+/** The nearest ancestor that scrolls vertically, or null when the document itself scrolls. */
+function scrollParent(node: Element) {
+  for (let element = node.parentElement; element; element = element.parentElement) {
+    const { overflowY } = getComputedStyle(element);
+    if ((overflowY === "auto" || overflowY === "scroll") && element.scrollHeight > element.clientHeight) {
+      return element;
+    }
+  }
+  return null;
+}
+
 /**
  * Turns true once the element comes within a screen of the viewport, and stays true.
  * Gates queries for panels far down the page; their skeletons hold the space meanwhile.
@@ -117,7 +128,9 @@ export function useNearViewport<T extends Element>(): [RefCallback<T>, boolean] 
           observer.disconnect();
         }
       },
-      { rootMargin: "100% 0px" },
+      // On desktop the page panel scrolls, not the window. The margin only widens the root,
+      // and the panel clips what lies beyond it, so the panel itself has to be the root.
+      { root: scrollParent(node), rootMargin: "100% 0px" },
     );
     observer.observe(node);
     return () => observer.disconnect();
