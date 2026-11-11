@@ -1,10 +1,12 @@
 "use client";
 
-import { type ReactNode, Suspense } from "react";
+import { type ReactNode, Suspense, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboardIcon,
+  type LucideIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
   StethoscopeIcon,
@@ -22,39 +24,78 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { analyticsQueries } from "@/features/dashboard/queries";
 import { SearchTrigger } from "@/features/search/command-palette";
+import type { AnalyticsSummary } from "@/lib/api";
+import { formatNumber } from "@/lib/format";
+import { queryKeys } from "@/lib/query-keys";
 
-const NAV_ITEMS = [
+const NAV_ITEMS: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  count?: keyof Pick<AnalyticsSummary, "totalDoctors" | "totalPatients">;
+}[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
-  { href: "/doctors", label: "Doctors", icon: StethoscopeIcon },
-  { href: "/patients", label: "Patients", icon: UsersRoundIcon },
+  { href: "/doctors", label: "Doctors", icon: StethoscopeIcon, count: "totalDoctors" },
+  { href: "/patients", label: "Patients", icon: UsersRoundIcon, count: "totalPatients" },
 ];
+
+// The dashboard's own key would race its server data: once the shell has created that query,
+// the page's prefetched copy no longer hydrates in render. Analytics invalidation still covers it.
+const navCountsQuery = {
+  ...analyticsQueries.summary("30d"),
+  queryKey: [...queryKeys.analytics, "nav-counts"],
+};
+
+const noSubscription = () => () => {};
+
+/** Nothing on the server or during hydration: the prerendered shell has no counts to match. */
+function useNavCounts() {
+  const hydrated = useSyncExternalStore(noSubscription, () => true, () => false);
+  const { data } = useQuery(navCountsQuery);
+  return hydrated ? data : undefined;
+}
 
 function NavLinks({ pathname }: { pathname: string | null }) {
   const { setOpenMobile } = useSidebar();
+  const counts = useNavCounts();
 
   return (
     <SidebarMenu>
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-        <SidebarMenuItem key={href}>
-          <SidebarMenuButton
-            render={<Link href={href} />}
-            isActive={pathname === href || pathname?.startsWith(`${href}/`)}
-            tooltip={label}
-            onClick={() => setOpenMobile(false)}
-            className="data-active:bg-background data-active:text-foreground data-active:shadow-xs data-active:[&_svg]:text-primary"
-          >
-            <Icon />
-            <span>{label}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+      {NAV_ITEMS.map(({ href, label, icon: Icon, count }) => {
+        const total = count && counts ? formatNumber(counts[count]) : null;
+        return (
+          <SidebarMenuItem key={href}>
+            <SidebarMenuButton
+              render={<Link href={href} />}
+              isActive={pathname === href || pathname?.startsWith(`${href}/`)}
+              tooltip={label}
+              aria-label={total ? `${label}, ${total}` : undefined}
+              onClick={() => setOpenMobile(false)}
+              className="data-active:bg-background data-active:text-foreground data-active:shadow-xs data-active:[&_svg]:text-primary"
+            >
+              <Icon />
+              <span>{label}</span>
+            </SidebarMenuButton>
+            {total && (
+              <SidebarMenuBadge
+                aria-hidden="true"
+                className="right-2 font-normal text-muted-foreground peer-hover/menu-button:text-muted-foreground peer-data-active/menu-button:text-muted-foreground peer-data-[size=default]/menu-button:top-2"
+              >
+                {total}
+              </SidebarMenuBadge>
+            )}
+          </SidebarMenuItem>
+        );
+      })}
     </SidebarMenu>
   );
 }
