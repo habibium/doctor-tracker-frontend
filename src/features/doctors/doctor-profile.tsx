@@ -97,7 +97,7 @@ export function DoctorProfile({ id }: { id: string }) {
 
       <DoctorAnalyticsBoard doctor={doctor} />
 
-      <section className="flex flex-col gap-4">
+      <section id="patients" className="flex scroll-mt-6 flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Patients</h2>
           {canEdit && <AddPatientButton doctor={doctor} />}

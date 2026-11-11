@@ -116,6 +116,24 @@ function genderLine(genders: DoctorAnalytics["genders"]) {
     .join(", ");
 }
 
+/** The leading diagnosis's share, and what has brought the most patients in lately. */
+function diagnosisFinding(diagnoses: DoctorAnalytics["diagnoses"]) {
+  const total = diagnoses.reduce((sum, row) => sum + row.patients, 0);
+  const lead = diagnoses[0];
+  if (!lead || total === 0) return "What their patients are being treated for.";
+  const parts = [`${lead.diagnosis} is ${formatPercent(lead.patients / total)} of their patients.`];
+  const recent = diagnoses.toSorted((a, b) => b.last30Days - a.last30Days || b.patients - a.patients)[0];
+  if (recent && recent.last30Days > 0) {
+    const counts = `${formatNumber(recent.last30Days)}, against ${formatNumber(recent.previous30Days)} in the 30 days before`;
+    parts.push(
+      recent === lead
+        ? `It also brought the most new patients in the last 30 days: ${counts}.`
+        : `${recent.diagnosis} brought the most new patients in the last 30 days: ${counts}.`,
+    );
+  }
+  return parts.join(" ");
+}
+
 function NoPatients({ name }: { name: string }) {
   return (
     <div className="flex items-center gap-4 rounded-2xl border border-dashed p-5 md:p-6">
@@ -166,9 +184,33 @@ export function DoctorAnalyticsBoard({ doctor }: { doctor: Doctor }) {
       </Panel>
 
       <Panel
+        title="Diagnoses"
+        description={analytics.data ? diagnosisFinding(analytics.data.diagnoses) : "What their patients are being treated for."}
+      >
+        <QueryContent query={analytics} fallback={<Skeleton className="h-[11.25rem] w-full rounded-xl" />}>
+          {(data) => {
+            const total = data.diagnoses.reduce((sum, row) => sum + row.patients, 0);
+            return (
+              <BarList
+                unit="patients"
+                items={data.diagnoses.map((row) => ({
+                  key: row.diagnosis,
+                  label: row.diagnosis,
+                  detail: `${formatPercent(row.patients / Math.max(1, total))}, ${formatNumber(row.last30Days)} new in 30 days`,
+                  value: row.patients,
+                  // Filters this doctor's own patient list further down the page.
+                  href: `/doctors/${doctor.id}?${new URLSearchParams({ diagnosis: row.diagnosis })}#patients`,
+                }))}
+              />
+            );
+          }}
+        </QueryContent>
+      </Panel>
+
+      <Panel
         title="New patients each month"
         description={analytics.data ? monthlySummary(analytics.data.monthly) : "The last 12 months."}
-        className="md:col-span-2 md:row-start-2 xl:col-span-1 xl:row-start-auto"
+        className="xl:order-last xl:col-span-3"
       >
         <QueryContent query={analytics} fallback={<Skeleton className="h-[12.125rem] w-full rounded-xl" />}>
           {(data) => <MonthlyColumns months={data.monthly} />}
