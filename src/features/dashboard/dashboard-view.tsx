@@ -261,14 +261,10 @@ function Arrivals() {
           className={dimmed}
           label={`Doctors who joined in ${period}`}
           value={totals ? formatNumber(totals.newDoctors) : <Skeleton className="h-9 w-16" />}
+          // A handful of joiners swings by large percentages, so the comparison is a count.
           detail={
-            totals && (
-              <Delta
-                current={totals.newDoctors}
-                previous={totals.previousNewDoctors}
-                period={`the ${period.replace("the last ", "")} before`}
-              />
-            )
+            totals &&
+            `Against ${formatNumber(totals.previousNewDoctors)} in the ${period.replace("the last ", "")} before.`
           }
         />
 

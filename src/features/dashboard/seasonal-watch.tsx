@@ -112,7 +112,7 @@ function niceMax(value: number) {
   return ([1, 1.2, 1.6, 2, 3, 4, 5, 6, 8, 10].find((step) => step * magnitude >= value) ?? 10) * magnitude;
 }
 
-const LAST_YEAR_INK = "color-mix(in oklab, var(--data) 42%, var(--card))";
+const LAST_YEAR_INK = "color-mix(in oklab, var(--data) 50%, var(--card))";
 
 interface Point {
   month: number;
