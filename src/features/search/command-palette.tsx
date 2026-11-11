@@ -7,9 +7,12 @@ import { SearchIcon } from "lucide-react";
 import { create } from "zustand";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
-import { Kbd } from "@/components/ui/kbd";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { Separator } from "@/components/ui/separator";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { toast } from "@/components/ui/toast";
 import type { PatientDoctor } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { roleQuery } from "./session";
 
 // In every signed-in page's bundle, so only the frame, shortcut and trigger live here;
@@ -48,21 +51,36 @@ export const useCommandPalette = create<PaletteState>((set, get) => ({
   setQuery: (query) => set({ query }),
 }));
 
+const OFFLINE_HINT = "Check your connection, then try again.";
+
 export const SEARCH_PLACEHOLDER = "Search doctors, patients and actions…";
 /** A fixed height, so results arriving or narrowing never resize the dialog. */
 export const LIST_HEIGHT = "h-[min(25rem,calc(100dvh-9rem))]";
 
-const loadBody = () => import("./palette-body");
+type Body = typeof import("./palette-body").PaletteBody;
+let bodyPromise: Promise<Body> | null = null;
+
+/** Loaded by hand rather than with `lazy`, which would keep a failed download failed. */
+function loadBody() {
+  bodyPromise ??= import("./palette-body").then(
+    (mod) => mod.PaletteBody,
+    (error: unknown) => {
+      bodyPromise = null;
+      throw error;
+    },
+  );
+  return bodyPromise;
+}
+
+/** A failure here is retried, and reported, when the palette actually opens. */
+const preloadBody = () => void loadBody().catch(() => {});
+
 const loadDoctorForm = () => import("@/features/doctors/doctor-form-dialog");
 const loadPatientForm = () => import("@/features/patients/patient-form-dialog");
 
 export const preloadForm = (kind: FormKind) =>
-  void (kind === "doctor" ? loadDoctorForm() : loadPatientForm());
+  void (kind === "doctor" ? loadDoctorForm() : loadPatientForm()).catch(() => {});
 
-const PaletteBody = dynamic(() => loadBody().then((mod) => mod.PaletteBody), {
-  ssr: false,
-  loading: () => <BodyFallback />,
-});
 const DoctorFormDialog = dynamic(() => loadDoctorForm().then((mod) => mod.DoctorFormDialog), {
   ssr: false,
 });
@@ -119,6 +137,8 @@ export function CommandPalette() {
   const open = useCommandPalette((state) => state.open);
   const setOpen = useCommandPalette((state) => state.setOpen);
   const setQuery = useCommandPalette((state) => state.setQuery);
+  const [Body, setBody] = useState<Body | null>(null);
+  const [bodyFailed, setBodyFailed] = useState(false);
   const [form, setForm] = useState<(FormRequest & { open: boolean }) | null>(null);
   // A form opens only once the palette has finished closing, so each dialog hands
   // focus back to the element that had it before the palette opened.
@@ -127,9 +147,16 @@ export function CommandPalette() {
   usePaletteShortcut();
 
   useEffect(() => {
+    if (!open) return;
     // Starts the role lookup alongside the body's download rather than after it.
-    if (open) void queryClient.prefetchQuery(roleQuery);
-  }, [open, queryClient]);
+    void queryClient.prefetchQuery(roleQuery);
+    if (!Body) {
+      loadBody().then(
+        (component) => setBody(() => component),
+        () => setBodyFailed(true),
+      );
+    }
+  }, [open, Body, queryClient]);
 
   function openForm(request: FormRequest) {
     pendingForm.current = request;
@@ -139,9 +166,15 @@ export function CommandPalette() {
   function onOpenChangeComplete(isOpen: boolean) {
     if (isOpen) return;
     setQuery("");
+    setBodyFailed(false);
     const request = pendingForm.current;
     pendingForm.current = null;
-    if (request) setForm({ ...request, open: true });
+    if (!request) return;
+    // Rendering a form whose code failed to download would throw inside the layout.
+    (request.kind === "doctor" ? loadDoctorForm() : loadPatientForm()).then(
+      () => setForm({ ...request, open: true }),
+      () => toast.add({ type: "error", title: "The form could not load", description: OFFLINE_HINT }),
+    );
   }
 
   const onFormOpenChange = (next: boolean) => setForm((current) => current && { ...current, open: next });
@@ -159,7 +192,8 @@ export function CommandPalette() {
           <DialogDescription className="sr-only">
             Find doctors and patients, go to a page, or run an action.
           </DialogDescription>
-          <PaletteBody onOpenForm={openForm} />
+          {Body ? <Body onOpenForm={openForm} /> : <BodyFallback failed={bodyFailed} />}
+          <KeyboardHints />
         </DialogContent>
       </Dialog>
       {form?.kind === "doctor" && <DoctorFormDialog open={form.open} onOpenChange={onFormOpenChange} />}
@@ -171,7 +205,7 @@ export function CommandPalette() {
 }
 
 /** Same frame as the body's input, so the swap is invisible and early typing is kept. */
-function BodyFallback() {
+function BodyFallback({ failed }: { failed: boolean }) {
   const query = useCommandPalette((state) => state.query);
   const setQuery = useCommandPalette((state) => state.setQuery);
 
@@ -192,8 +226,40 @@ function BodyFallback() {
           </InputGroupAddon>
         </InputGroup>
       </div>
-      <div className={LIST_HEIGHT} />
+      <div className={cn(LIST_HEIGHT, "flex items-center justify-center px-6 text-center")}>
+        {failed && (
+          <p role="alert" className="text-sm text-muted-foreground">
+            Search could not load. {OFFLINE_HINT}
+          </p>
+        )}
+      </div>
     </div>
+  );
+}
+
+/** Outside the body, so the frame keeps its height when the body replaces the fallback. */
+function KeyboardHints() {
+  return (
+    <>
+      <Separator className="pointer-coarse:hidden" />
+      <div className="flex items-center gap-4 px-4 py-2.5 text-xs text-muted-foreground pointer-coarse:hidden">
+        <span className="flex items-center gap-1.5">
+          <KbdGroup>
+            <Kbd>↑</Kbd>
+            <Kbd>↓</Kbd>
+          </KbdGroup>
+          to move
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Kbd>↵</Kbd>
+          to open
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Kbd>Esc</Kbd>
+          to close
+        </span>
+      </div>
+    </>
   );
 }
 
@@ -217,8 +283,8 @@ export function SearchTrigger({ className }: { className?: string }) {
       aria-keyshortcuts={shortcut ? (shortcut === "⌘K" ? "Meta+K" : "Control+K") : undefined}
       onClick={() => setOpen(true)}
       // Pointing at or tabbing to the trigger is a strong hint; fetch the body early.
-      onPointerEnter={() => void loadBody()}
-      onFocus={() => void loadBody()}
+      onPointerEnter={preloadBody}
+      onFocus={preloadBody}
     >
       <SearchIcon />
       <span>Search</span>

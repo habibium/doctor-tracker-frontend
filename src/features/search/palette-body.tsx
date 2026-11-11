@@ -30,8 +30,6 @@ import {
 } from "@/components/ui/command";
 import { DialogClose } from "@/components/ui/dialog";
 import { InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
@@ -341,25 +339,6 @@ export function PaletteBody({ onOpenForm }: { onOpenForm: (request: FormRequest)
           <EmptyState term={search.term} doctors={doctors} patients={patients} />
         )}
       </CommandList>
-
-      <Separator className="pointer-coarse:hidden" />
-      <div className="flex items-center gap-4 px-4 py-2.5 text-xs text-muted-foreground pointer-coarse:hidden">
-        <span className="flex items-center gap-1.5">
-          <KbdGroup>
-            <Kbd>↑</Kbd>
-            <Kbd>↓</Kbd>
-          </KbdGroup>
-          to move
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Kbd>↵</Kbd>
-          to open
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Kbd>Esc</Kbd>
-          to close
-        </span>
-      </div>
 
       <p aria-live="polite" className="sr-only">
         {announcement}
