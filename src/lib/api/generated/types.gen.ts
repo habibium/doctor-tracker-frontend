@@ -53,6 +53,38 @@ export type UpdatePatient = {
     doctorId?: string;
 };
 
+export type CreateUser = {
+    name: string;
+    email: string;
+    /**
+     * `viewer` can read; `admin` can also change data
+     */
+    role: 'admin' | 'viewer';
+    /**
+     * 12 to 128 characters
+     */
+    password: string;
+};
+
+export type UpdateUser = {
+    name?: string;
+    /**
+     * `viewer` can read; `admin` can also change data
+     */
+    role?: 'admin' | 'viewer';
+    /**
+     * `deactivated` blocks sign-in and ends every session at once
+     */
+    status?: 'active' | 'deactivated';
+};
+
+export type ResetUserPassword = {
+    /**
+     * 12 to 128 characters
+     */
+    password: string;
+};
+
 export type DoctorList = {
     data: Array<Doctor>;
     meta: PaginationMeta;
@@ -257,6 +289,24 @@ export type DoctorAnalytics = {
         gender: Gender;
         patients: number;
     }>;
+};
+
+export type UserList = {
+    data: Array<User>;
+    meta: PaginationMeta;
+};
+
+export type User = {
+    id: string;
+    name: string;
+    email: string;
+    /**
+     * `viewer` can read; `admin` can also change data
+     */
+    role: 'admin' | 'viewer';
+    status: 'active' | 'deactivated';
+    deactivatedAt: string | null;
+    createdAt: string;
 };
 
 export type ListDoctorsData = {
@@ -1147,3 +1197,214 @@ export type GetDoctorAnalyticsResponses = {
 };
 
 export type GetDoctorAnalyticsResponse = GetDoctorAnalyticsResponses[keyof GetDoctorAnalyticsResponses];
+
+export type ListUsersData = {
+    body?: never;
+    path?: never;
+    query?: {
+        page?: number;
+        limit?: number;
+        /**
+         * Matches the start of any word; several words must all match
+         */
+        search?: string;
+        /**
+         * `viewer` can read; `admin` can also change data
+         */
+        role?: 'admin' | 'viewer';
+        status?: 'active' | 'deactivated';
+        /**
+         * Created on or after this date
+         */
+        from?: string;
+        /**
+         * Created on or before this date
+         */
+        to?: string;
+        /**
+         * A leading `-` sorts descending
+         */
+        sort?: 'createdAt' | '-createdAt' | 'name' | '-name' | 'email' | '-email' | 'role' | '-role';
+    };
+    url: '/api/v1/users';
+};
+
+export type ListUsersErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+    /**
+     * Signed in, but not allowed to do this
+     */
+    403: ErrorResponse;
+};
+
+export type ListUsersError = ListUsersErrors[keyof ListUsersErrors];
+
+export type ListUsersResponses = {
+    /**
+     * A page of users
+     */
+    200: UserList;
+};
+
+export type ListUsersResponse = ListUsersResponses[keyof ListUsersResponses];
+
+export type CreateUserData = {
+    body: CreateUser;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users';
+};
+
+export type CreateUserErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+    /**
+     * Signed in, but not allowed to do this
+     */
+    403: ErrorResponse;
+    /**
+     * The request conflicts with existing data
+     */
+    409: ErrorResponse;
+};
+
+export type CreateUserError = CreateUserErrors[keyof CreateUserErrors];
+
+export type CreateUserResponses = {
+    /**
+     * The created user
+     */
+    201: User;
+};
+
+export type CreateUserResponse = CreateUserResponses[keyof CreateUserResponses];
+
+export type DeleteUserData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/users/{id}';
+};
+
+export type DeleteUserErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+    /**
+     * Signed in, but not allowed to do this
+     */
+    403: ErrorResponse;
+    /**
+     * The resource does not exist
+     */
+    404: ErrorResponse;
+};
+
+export type DeleteUserError = DeleteUserErrors[keyof DeleteUserErrors];
+
+export type DeleteUserResponses = {
+    /**
+     * User deleted
+     */
+    204: void;
+};
+
+export type DeleteUserResponse = DeleteUserResponses[keyof DeleteUserResponses];
+
+export type UpdateUserData = {
+    body: UpdateUser;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/users/{id}';
+};
+
+export type UpdateUserErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+    /**
+     * Signed in, but not allowed to do this
+     */
+    403: ErrorResponse;
+    /**
+     * The resource does not exist
+     */
+    404: ErrorResponse;
+};
+
+export type UpdateUserError = UpdateUserErrors[keyof UpdateUserErrors];
+
+export type UpdateUserResponses = {
+    /**
+     * The updated user
+     */
+    200: User;
+};
+
+export type UpdateUserResponse = UpdateUserResponses[keyof UpdateUserResponses];
+
+export type ResetUserPasswordData = {
+    body: ResetUserPassword;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/users/{id}/password';
+};
+
+export type ResetUserPasswordErrors = {
+    /**
+     * The request failed validation
+     */
+    400: ErrorResponse;
+    /**
+     * Not signed in
+     */
+    401: ErrorResponse;
+    /**
+     * Signed in, but not allowed to do this
+     */
+    403: ErrorResponse;
+    /**
+     * The resource does not exist
+     */
+    404: ErrorResponse;
+};
+
+export type ResetUserPasswordError = ResetUserPasswordErrors[keyof ResetUserPasswordErrors];
+
+export type ResetUserPasswordResponses = {
+    /**
+     * Password replaced
+     */
+    204: void;
+};
+
+export type ResetUserPasswordResponse = ResetUserPasswordResponses[keyof ResetUserPasswordResponses];

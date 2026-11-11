@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateDoctorData, CreateDoctorErrors, CreateDoctorPatientData, CreateDoctorPatientErrors, CreateDoctorPatientResponses, CreateDoctorResponses, CreatePatientData, CreatePatientErrors, CreatePatientResponses, DeleteDoctorData, DeleteDoctorErrors, DeleteDoctorPatientData, DeleteDoctorPatientErrors, DeleteDoctorPatientResponses, DeleteDoctorResponses, DeletePatientData, DeletePatientErrors, DeletePatientResponses, GetAnalyticsSummaryData, GetAnalyticsSummaryErrors, GetAnalyticsSummaryResponses, GetConditionBreakdownData, GetConditionBreakdownErrors, GetConditionBreakdownResponses, GetConditionMixData, GetConditionMixErrors, GetConditionMixResponses, GetDemographicsData, GetDemographicsErrors, GetDemographicsResponses, GetDoctorAnalyticsData, GetDoctorAnalyticsErrors, GetDoctorAnalyticsResponses, GetDoctorData, GetDoctorErrors, GetDoctorFiltersData, GetDoctorFiltersErrors, GetDoctorFiltersResponses, GetDoctorResponses, GetIntakeHoursData, GetIntakeHoursErrors, GetIntakeHoursResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPatientsPerDoctorData, GetPatientsPerDoctorErrors, GetPatientsPerDoctorResponses, GetRegistrationsData, GetRegistrationsErrors, GetRegistrationsResponses, GetSpecializationBreakdownData, GetSpecializationBreakdownErrors, GetSpecializationBreakdownResponses, GetWorkloadData, GetWorkloadErrors, GetWorkloadResponses, ListDoctorPatientsData, ListDoctorPatientsErrors, ListDoctorPatientsResponses, ListDoctorsData, ListDoctorsErrors, ListDoctorsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, UpdateDoctorData, UpdateDoctorErrors, UpdateDoctorResponses, UpdatePatientData, UpdatePatientErrors, UpdatePatientResponses } from './types.gen';
+import type { CreateDoctorData, CreateDoctorErrors, CreateDoctorPatientData, CreateDoctorPatientErrors, CreateDoctorPatientResponses, CreateDoctorResponses, CreatePatientData, CreatePatientErrors, CreatePatientResponses, CreateUserData, CreateUserErrors, CreateUserResponses, DeleteDoctorData, DeleteDoctorErrors, DeleteDoctorPatientData, DeleteDoctorPatientErrors, DeleteDoctorPatientResponses, DeleteDoctorResponses, DeletePatientData, DeletePatientErrors, DeletePatientResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, GetAnalyticsSummaryData, GetAnalyticsSummaryErrors, GetAnalyticsSummaryResponses, GetConditionBreakdownData, GetConditionBreakdownErrors, GetConditionBreakdownResponses, GetConditionMixData, GetConditionMixErrors, GetConditionMixResponses, GetDemographicsData, GetDemographicsErrors, GetDemographicsResponses, GetDoctorAnalyticsData, GetDoctorAnalyticsErrors, GetDoctorAnalyticsResponses, GetDoctorData, GetDoctorErrors, GetDoctorFiltersData, GetDoctorFiltersErrors, GetDoctorFiltersResponses, GetDoctorResponses, GetIntakeHoursData, GetIntakeHoursErrors, GetIntakeHoursResponses, GetPatientData, GetPatientErrors, GetPatientResponses, GetPatientsPerDoctorData, GetPatientsPerDoctorErrors, GetPatientsPerDoctorResponses, GetRegistrationsData, GetRegistrationsErrors, GetRegistrationsResponses, GetSpecializationBreakdownData, GetSpecializationBreakdownErrors, GetSpecializationBreakdownResponses, GetWorkloadData, GetWorkloadErrors, GetWorkloadResponses, ListDoctorPatientsData, ListDoctorPatientsErrors, ListDoctorPatientsResponses, ListDoctorsData, ListDoctorsErrors, ListDoctorsResponses, ListPatientsData, ListPatientsErrors, ListPatientsResponses, ListUsersData, ListUsersErrors, ListUsersResponses, ResetUserPasswordData, ResetUserPasswordErrors, ResetUserPasswordResponses, UpdateDoctorData, UpdateDoctorErrors, UpdateDoctorResponses, UpdatePatientData, UpdatePatientErrors, UpdatePatientResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -348,4 +348,81 @@ export const getDoctorAnalytics = <ThrowOnError extends boolean = false>(options
         }],
     url: '/api/v1/doctors/{id}/analytics',
     ...options
+});
+
+/**
+ * List users with search, filters and pagination
+ */
+export const listUsers = <ThrowOnError extends boolean = false>(options?: Options<ListUsersData, ThrowOnError>): RequestResult<ListUsersResponses, ListUsersErrors, ThrowOnError> => (options?.client ?? client).get<ListUsersResponses, ListUsersErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/users',
+    ...options
+});
+
+/**
+ * Create a user with an initial password
+ */
+export const createUser = <ThrowOnError extends boolean = false>(options: Options<CreateUserData, ThrowOnError>): RequestResult<CreateUserResponses, CreateUserErrors, ThrowOnError> => (options.client ?? client).post<CreateUserResponses, CreateUserErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/users',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete a user and end their sessions
+ */
+export const deleteUser = <ThrowOnError extends boolean = false>(options: Options<DeleteUserData, ThrowOnError>): RequestResult<DeleteUserResponses, DeleteUserErrors, ThrowOnError> => (options.client ?? client).delete<DeleteUserResponses, DeleteUserErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/users/{id}',
+    ...options
+});
+
+/**
+ * Rename, change the role of, deactivate or reactivate a user
+ */
+export const updateUser = <ThrowOnError extends boolean = false>(options: Options<UpdateUserData, ThrowOnError>): RequestResult<UpdateUserResponses, UpdateUserErrors, ThrowOnError> => (options.client ?? client).patch<UpdateUserResponses, UpdateUserErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/users/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set a new password for a user and end their sessions
+ */
+export const resetUserPassword = <ThrowOnError extends boolean = false>(options: Options<ResetUserPasswordData, ThrowOnError>): RequestResult<ResetUserPasswordResponses, ResetUserPasswordErrors, ThrowOnError> => (options.client ?? client).post<ResetUserPasswordResponses, ResetUserPasswordErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/users/{id}/password',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
