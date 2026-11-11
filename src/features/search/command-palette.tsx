@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
 import { create } from "zustand";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
@@ -81,12 +79,10 @@ const loadPatientForm = () => import("@/features/patients/patient-form-dialog");
 export const preloadForm = (kind: FormKind) =>
   void (kind === "doctor" ? loadDoctorForm() : loadPatientForm()).catch(() => {});
 
-const DoctorFormDialog = dynamic(() => loadDoctorForm().then((mod) => mod.DoctorFormDialog), {
-  ssr: false,
-});
-const PatientFormDialog = dynamic(() => loadPatientForm().then((mod) => mod.PatientFormDialog), {
-  ssr: false,
-});
+interface FormDialogs {
+  doctor?: typeof import("@/features/doctors/doctor-form-dialog").DoctorFormDialog;
+  patient?: typeof import("@/features/patients/patient-form-dialog").PatientFormDialog;
+}
 
 function isApplePlatform() {
   const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
@@ -139,6 +135,7 @@ export function CommandPalette() {
   const setQuery = useCommandPalette((state) => state.setQuery);
   const [Body, setBody] = useState<Body | null>(null);
   const [bodyFailed, setBodyFailed] = useState(false);
+  const [forms, setForms] = useState<FormDialogs>({});
   const [form, setForm] = useState<(FormRequest & { open: boolean }) | null>(null);
   // A form opens only once the palette has finished closing, so each dialog hands
   // focus back to the element that had it before the palette opened.
@@ -170,14 +167,22 @@ export function CommandPalette() {
     const request = pendingForm.current;
     pendingForm.current = null;
     if (!request) return;
-    // Rendering a form whose code failed to download would throw inside the layout.
-    (request.kind === "doctor" ? loadDoctorForm() : loadPatientForm()).then(
-      () => setForm({ ...request, open: true }),
+    // Loaded by hand, like the body, so a failed download is reported rather than thrown.
+    const loaded: Promise<FormDialogs> =
+      request.kind === "doctor"
+        ? loadDoctorForm().then((mod) => ({ doctor: mod.DoctorFormDialog }))
+        : loadPatientForm().then((mod) => ({ patient: mod.PatientFormDialog }));
+    loaded.then(
+      (dialog) => {
+        setForms((current) => ({ ...current, ...dialog }));
+        setForm({ ...request, open: true });
+      },
       () => toast.add({ type: "error", title: "The form could not load", description: OFFLINE_HINT }),
     );
   }
 
   const onFormOpenChange = (next: boolean) => setForm((current) => current && { ...current, open: next });
+  const { doctor: DoctorFormDialog, patient: PatientFormDialog } = forms;
 
   return (
     <>
@@ -196,15 +201,17 @@ export function CommandPalette() {
           <KeyboardHints />
         </DialogContent>
       </Dialog>
-      {form?.kind === "doctor" && <DoctorFormDialog open={form.open} onOpenChange={onFormOpenChange} />}
-      {form?.kind === "patient" && (
+      {form?.kind === "doctor" && DoctorFormDialog && (
+        <DoctorFormDialog open={form.open} onOpenChange={onFormOpenChange} />
+      )}
+      {form?.kind === "patient" && PatientFormDialog && (
         <PatientFormDialog doctor={form.doctor} open={form.open} onOpenChange={onFormOpenChange} />
       )}
     </>
   );
 }
 
-/** Same frame as the body's input, so the swap is invisible and early typing is kept. */
+/** Looks like the body's input, without its code, so the swap is invisible and early typing is kept. */
 function BodyFallback({ failed }: { failed: boolean }) {
   const query = useCommandPalette((state) => state.query);
   const setQuery = useCommandPalette((state) => state.setQuery);
@@ -212,19 +219,17 @@ function BodyFallback({ failed }: { failed: boolean }) {
   return (
     <div className="flex flex-col p-1">
       <div className="p-1 pb-0">
-        <InputGroup className="h-9 bg-input/50">
+        <div className="flex h-9 items-center rounded-4xl border border-transparent bg-input/50">
+          <SearchIcon className="ml-3 size-4 shrink-0 text-muted-foreground opacity-50" />
           <input
             autoFocus
             aria-label="Search"
             placeholder={SEARCH_PLACEHOLDER}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="w-full text-sm outline-hidden"
+            className="w-full pl-1.5 text-sm outline-hidden"
           />
-          <InputGroupAddon>
-            <SearchIcon className="size-4 shrink-0 opacity-50" />
-          </InputGroupAddon>
-        </InputGroup>
+        </div>
       </div>
       <div className={cn(LIST_HEIGHT, "flex items-center justify-center px-6 text-center")}>
         {failed && (

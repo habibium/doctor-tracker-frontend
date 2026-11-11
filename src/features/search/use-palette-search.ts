@@ -9,11 +9,12 @@ import {
 import { doctorQueries } from "@/features/doctors/queries";
 import { patientQueries } from "@/features/patients/queries";
 import type { Doctor, DoctorList, Patient } from "@/lib/api";
-import { searchTerm } from "@/lib/list-params";
 import { queryKeys } from "@/lib/query-keys";
 import { doctorTokens, matchesAll, patientTokens, refines, searchTerms } from "./match";
 
 export const MIN_SEARCH_LENGTH = 2;
+/** The API's limit, as in `searchTerm` from list-params, which would pull nuqs into this chunk. */
+const MAX_SEARCH_LENGTH = 100;
 const RESULT_LIMIT = 5;
 const PAUSE_MS = 200;
 
@@ -109,7 +110,7 @@ function toGroup<T>(
  */
 export function usePaletteSearch(input: string) {
   const client = useQueryClient();
-  const term = searchTerm(input);
+  const term = input.trim().slice(0, MAX_SEARCH_LENGTH);
   const settled = useSettledTerm(
     term,
     (next) =>
